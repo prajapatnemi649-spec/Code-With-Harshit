@@ -1,25 +1,41 @@
 ````javascript
-// ==========================================
-// CODE WITH HARSHIT — APP.JS
-// Production + Localhost Safe Version
-// ==========================================
+// ============================================================
+// CODE WITH HARSHIT — COMPLETE APP.JS
+// Stable Button + Login + AI + ID + Matrix + SFX System
+// ============================================================
 
 "use strict";
 
-// ==========================================
-// 1. GLOBAL VARIABLES & CONFIG
-// ==========================================
+// ============================================================
+// 1. GLOBAL STATE
+// ============================================================
 
 let customApiKey = localStorage.getItem("harshit_ai_key") || "";
 let audioCtx = null;
-let sfxEnabled = true;
+let sfxEnabled = localStorage.getItem("cwh_sfx") !== "off";
 
-// ==========================================
-// 2. SAFE HTML ESCAPE
-// ==========================================
+let currentStudent = {
+    name: localStorage.getItem("cwh_student_name") || "Student Coder",
+    email: localStorage.getItem("cwh_student_email") || "student@gmail.com",
+    avatar: localStorage.getItem("cwh_student_avatar") || ""
+};
+
+
+// ============================================================
+// 2. SAFE DOM HELPER
+// ============================================================
+
+function $(id) {
+    return document.getElementById(id);
+}
+
+
+// ============================================================
+// 3. HTML ESCAPE
+// ============================================================
 
 function escapeHTML(text) {
-    return String(text ?? "")
+    return String(text)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
@@ -27,48 +43,116 @@ function escapeHTML(text) {
         .replace(/'/g, "&#039;");
 }
 
-// ==========================================
-// 3. PLASMA CURSOR
-// ==========================================
 
-document.addEventListener("mousemove", (e) => {
-    const dot = document.getElementById("cursor-dot");
-    const ring = document.getElementById("cursor-ring");
+// ============================================================
+// 4. PLASMA CURSOR
+// ============================================================
 
-    if (dot) {
-        dot.style.left = `${e.clientX}px`;
-        dot.style.top = `${e.clientY}px`;
-    }
+function initCursor() {
 
-    if (ring) {
-        ring.style.left = `${e.clientX}px`;
-        ring.style.top = `${e.clientY}px`;
-    }
-});
+    const dot = $("cursor-dot");
+    const ring = $("cursor-ring");
 
-// ==========================================
-// 4. MATRIX MODE
-// ==========================================
+    if (!dot && !ring) return;
 
-function toggleMatrixMode() {
-    document.body.classList.toggle("matrix-mode");
+    document.addEventListener("mousemove", function (e) {
+
+        if (dot) {
+            dot.style.left = e.clientX + "px";
+            dot.style.top = e.clientY + "px";
+        }
+
+        if (ring) {
+            ring.style.left = e.clientX + "px";
+            ring.style.top = e.clientY + "px";
+        }
+    });
+
+    document.addEventListener("mouseleave", function () {
+
+        if (dot) dot.style.opacity = "0";
+        if (ring) ring.style.opacity = "0";
+
+    });
+
+    document.addEventListener("mouseenter", function () {
+
+        if (dot) dot.style.opacity = "1";
+        if (ring) ring.style.opacity = "1";
+
+    });
 }
 
-window.addEventListener("keydown", (e) => {
-    if (e.key === "h" || e.key === "H") {
-        toggleMatrixMode();
-    }
-});
 
-// ==========================================
-// 5. AUDIO SYNTHESIZER
-// ==========================================
+// ============================================================
+// 5. MATRIX MODE
+// ============================================================
 
-function playSFX(type) {
+function toggleMatrixMode() {
+
+    document.body.classList.toggle("matrix-mode");
+
+    const enabled =
+        document.body.classList.contains("matrix-mode");
+
+    localStorage.setItem(
+        "cwh_matrix_mode",
+        enabled ? "on" : "off"
+    );
+
+    playSFX("beep");
+
+    showCWHToast(
+        enabled
+            ? "MATRIX MODE: ONLINE"
+            : "MATRIX MODE: OFF",
+        "info"
+    );
+}
+
+
+// Keyboard H
+function initKeyboardShortcuts() {
+
+    document.addEventListener("keydown", function (e) {
+
+        // Don't trigger while typing
+        const tag = document.activeElement
+            ? document.activeElement.tagName
+            : "";
+
+        if (
+            tag === "INPUT" ||
+            tag === "TEXTAREA"
+        ) {
+            return;
+        }
+
+        if (e.key.toLowerCase() === "h") {
+            toggleMatrixMode();
+        }
+
+        if (e.key === "Escape") {
+            closeLoginModal();
+            closeCyberIDModal();
+            closeWorkspace();
+        }
+    });
+}
+
+
+// ============================================================
+// 6. AUDIO / SFX
+// ============================================================
+
+function playSFX(type = "beep") {
+
     if (!sfxEnabled) return;
 
     try {
+
         if (!audioCtx) {
+
             const AudioContext =
                 window.AudioContext ||
                 window.webkitAudioContext;
@@ -82,360 +166,934 @@ function playSFX(type) {
             audioCtx.resume();
         }
 
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+        const oscillator =
+            audioCtx.createOscillator();
 
-        osc.connect(gain);
+        const gain =
+            audioCtx.createGain();
+
+        oscillator.connect(gain);
         gain.connect(audioCtx.destination);
 
-        const now = audioCtx.currentTime;
+        const now =
+            audioCtx.currentTime;
 
         if (type === "beep") {
-            osc.type = "sine";
 
-            osc.frequency.setValueAtTime(800, now);
-            osc.frequency.exponentialRampToValueAtTime(
-                1400,
+            oscillator.type = "sine";
+
+            oscillator.frequency.setValueAtTime(
+                700,
+                now
+            );
+
+            oscillator.frequency.exponentialRampToValueAtTime(
+                1300,
                 now + 0.08
             );
 
-            gain.gain.setValueAtTime(0.15, now);
-            gain.gain.linearRampToValueAtTime(
-                0,
-                now + 0.08
+            gain.gain.setValueAtTime(
+                0.12,
+                now
             );
 
-            osc.start(now);
-            osc.stop(now + 0.08);
+            gain.gain.exponentialRampToValueAtTime(
+                0.001,
+                now + 0.09
+            );
+
+            oscillator.start(now);
+            oscillator.stop(now + 0.1);
         }
 
-        if (type === "warp") {
-            osc.type = "sawtooth";
+        else if (type === "warp") {
 
-            osc.frequency.setValueAtTime(120, now);
-            osc.frequency.exponentialRampToValueAtTime(
+            oscillator.type = "sawtooth";
+
+            oscillator.frequency.setValueAtTime(
+                100,
+                now
+            );
+
+            oscillator.frequency.exponentialRampToValueAtTime(
                 1600,
-                now + 0.8
+                now + 0.7
             );
 
-            gain.gain.setValueAtTime(0.35, now);
-            gain.gain.linearRampToValueAtTime(
-                0,
-                now + 0.8
+            gain.gain.setValueAtTime(
+                0.16,
+                now
             );
 
-            osc.start(now);
-            osc.stop(now + 0.8);
+            gain.gain.exponentialRampToValueAtTime(
+                0.001,
+                now + 0.7
+            );
+
+            oscillator.start(now);
+            oscillator.stop(now + 0.7);
         }
+
+        else if (type === "success") {
+
+            oscillator.type = "sine";
+
+            oscillator.frequency.setValueAtTime(
+                500,
+                now
+            );
+
+            oscillator.frequency.setValueAtTime(
+                800,
+                now + 0.08
+            );
+
+            oscillator.frequency.setValueAtTime(
+                1100,
+                now + 0.16
+            );
+
+            gain.gain.setValueAtTime(
+                0.12,
+                now
+            );
+
+            gain.gain.exponentialRampToValueAtTime(
+                0.001,
+                now + 0.25
+            );
+
+            oscillator.start(now);
+            oscillator.stop(now + 0.27);
+        }
+
     } catch (error) {
-        console.warn("Audio unavailable:", error);
+
+        console.warn(
+            "Audio unavailable:",
+            error
+        );
     }
 }
 
-// ==========================================
-// 6. FLOATING STARS
-// ==========================================
 
-function initInputBoxStars() {
-    const canvas =
-        document.getElementById("input-star-canvas");
+// ============================================================
+// 7. AUDIO TOGGLE
+// ============================================================
 
-    if (!canvas) return;
+function toggleAudio() {
 
-    const ctx = canvas.getContext("2d");
+    sfxEnabled = !sfxEnabled;
 
-    if (!ctx) return;
-
-    function resize() {
-        if (!canvas.parentElement) return;
-
-        canvas.width =
-            canvas.parentElement.offsetWidth;
-
-        canvas.height =
-            canvas.parentElement.offsetHeight;
-    }
-
-    resize();
-
-    window.addEventListener("resize", resize);
-
-    const stars = Array.from(
-        { length: 35 },
-        () => ({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            size: Math.random() * 1.5 + 0.5,
-            speedX: (Math.random() - 0.5) * 0.4,
-            speedY: (Math.random() - 0.5) * 0.4,
-            alpha: Math.random() * 0.7 + 0.3
-        })
+    localStorage.setItem(
+        "cwh_sfx",
+        sfxEnabled ? "on" : "off"
     );
 
-    function draw() {
-        ctx.clearRect(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
+    const status = $("sfx-status");
 
-        stars.forEach((star) => {
-            star.x += star.speedX;
-            star.y += star.speedY;
-
-            if (star.x < 0) {
-                star.x = canvas.width;
-            }
-
-            if (star.x > canvas.width) {
-                star.x = 0;
-            }
-
-            if (star.y < 0) {
-                star.y = canvas.height;
-            }
-
-            if (star.y > canvas.height) {
-                star.y = 0;
-            }
-
-            ctx.fillStyle =
-                `rgba(56,189,248,${star.alpha})`;
-
-            ctx.beginPath();
-
-            ctx.arc(
-                star.x,
-                star.y,
-                star.size,
-                0,
-                Math.PI * 2
-            );
-
-            ctx.fill();
-        });
-
-        requestAnimationFrame(draw);
+    if (status) {
+        status.innerText =
+            sfxEnabled
+                ? "SFX ON"
+                : "SFX MUTED";
     }
 
-    draw();
+    const button = $("audio-toggle");
+
+    if (button) {
+
+        button.setAttribute(
+            "aria-label",
+            sfxEnabled
+                ? "Mute sound"
+                : "Enable sound"
+        );
+    }
+
+    if (sfxEnabled) {
+
+        playSFX("success");
+
+        showCWHToast(
+            "SFX ENABLED",
+            "success"
+        );
+
+    } else {
+
+        showCWHToast(
+            "SFX MUTED",
+            "info"
+        );
+    }
 }
 
-// ==========================================
-// 7. GSAP SCROLL CAMERA ZOOM
-// ==========================================
 
-function initGSAPScroll() {
-    if (
-        typeof gsap === "undefined" ||
-        typeof ScrollTrigger === "undefined"
-    ) {
-        console.warn("GSAP / ScrollTrigger not found.");
+// ============================================================
+// 8. API KEY CONFIGURATION
+// ============================================================
+
+function configureApiKey() {
+
+    const existing =
+        $("cwh-api-modal");
+
+    if (existing) {
+        existing.remove();
+    }
+
+    const modal =
+        document.createElement("div");
+
+    modal.id =
+        "cwh-api-modal";
+
+    modal.style.cssText = `
+        position:fixed;
+        inset:0;
+        z-index:999999;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:20px;
+        background:rgba(0,0,0,.82);
+        backdrop-filter:blur(10px);
+    `;
+
+    modal.innerHTML = `
+
+        <div style="
+            width:min(480px,95vw);
+            background:#030712;
+            border:1px solid rgba(34,211,238,.5);
+            border-radius:24px;
+            padding:26px;
+            box-shadow:0 0 50px rgba(6,182,212,.2);
+            color:white;
+            font-family:monospace;
+        ">
+
+            <div style="
+                color:#22d3ee;
+                font-size:12px;
+                letter-spacing:3px;
+                margin-bottom:10px;
+            ">
+                HARSHIT AI // CONFIG
+            </div>
+
+            <h2 style="
+                margin:0 0 8px;
+                font-size:22px;
+            ">
+                ⚙️ AI API Key
+            </h2>
+
+            <p style="
+                color:#94a3b8;
+                font-size:11px;
+                line-height:1.6;
+            ">
+                Optional setting. Normally your backend should keep
+                the AI API key inside server environment variables.
+            </p>
+
+            <input
+                id="cwh-api-input"
+                type="password"
+                value="${escapeHTML(customApiKey)}"
+                placeholder="Paste API key if your backend supports it..."
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    margin-top:16px;
+                    padding:13px;
+                    border-radius:12px;
+                    border:1px solid rgba(34,211,238,.3);
+                    background:#020617;
+                    color:white;
+                    outline:none;
+                    font-family:monospace;
+                "
+            >
+
+            <div style="
+                display:flex;
+                gap:10px;
+                margin-top:16px;
+            ">
+
+                <button
+                    id="cwh-api-save"
+                    style="
+                        flex:1;
+                        padding:12px;
+                        border:0;
+                        border-radius:12px;
+                        background:linear-gradient(90deg,#22d3ee,#3b82f6);
+                        color:#000;
+                        font-weight:bold;
+                        cursor:pointer;
+                    "
+                >
+                    SAVE
+                </button>
+
+                <button
+                    id="cwh-api-close"
+                    style="
+                        flex:1;
+                        padding:12px;
+                        border:1px solid #334155;
+                        border-radius:12px;
+                        background:transparent;
+                        color:#cbd5e1;
+                        cursor:pointer;
+                    "
+                >
+                    CLOSE
+                </button>
+
+            </div>
+
+            <p style="
+                color:#64748b;
+                font-size:9px;
+                margin-top:14px;
+            ">
+                Security tip: production API keys should stay on the server.
+            </p>
+
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    $("cwh-api-close").onclick =
+        function () {
+            modal.remove();
+        };
+
+    $("cwh-api-save").onclick =
+        function () {
+
+            const input =
+                $("cwh-api-input");
+
+            customApiKey =
+                input
+                    ? input.value.trim()
+                    : "";
+
+            if (customApiKey) {
+
+                localStorage.setItem(
+                    "harshit_ai_key",
+                    customApiKey
+                );
+
+                showCWHToast(
+                    "API key saved locally.",
+                    "success"
+                );
+
+            } else {
+
+                localStorage.removeItem(
+                    "harshit_ai_key"
+                );
+
+                showCWHToast(
+                    "API key removed.",
+                    "info"
+                );
+            }
+
+            modal.remove();
+        };
+
+    modal.addEventListener(
+        "click",
+        function (e) {
+
+            if (e.target === modal) {
+                modal.remove();
+            }
+        }
+    );
+}
+
+
+// ============================================================
+// 9. LOGIN MODAL
+// ============================================================
+
+function openLoginModal() {
+
+    const modal =
+        $("login-modal");
+
+    if (!modal) {
+
+        console.error(
+            "login-modal not found in HTML"
+        );
+
         return;
     }
 
-    gsap.registerPlugin(ScrollTrigger);
+    modal.classList.remove("hidden");
 
-    if (typeof camera !== "undefined") {
-        gsap.to(camera.position, {
-            z: -2500,
-            ease: "none",
-            scrollTrigger: {
-                trigger: "#main-content",
-                start: "top top",
-                end: "bottom bottom",
-                scrub: 1.2
-            }
-        });
+    document.body.classList.add(
+        "overflow-hidden"
+    );
+
+    setTimeout(function () {
+
+        const name =
+            $("student-input-name");
+
+        if (name) {
+            name.focus();
+        }
+
+    }, 100);
+
+    playSFX("beep");
+}
+
+
+function closeLoginModal() {
+
+    const modal =
+        $("login-modal");
+
+    if (modal) {
+        modal.classList.add("hidden");
+    }
+
+    document.body.classList.remove(
+        "overflow-hidden"
+    );
+}
+
+
+// ============================================================
+// 10. STUDENT LOGIN
+// ============================================================
+
+function handleStudentLogin(event) {
+
+    if (event) {
+        event.preventDefault();
+    }
+
+    const nameField =
+        $("student-input-name");
+
+    const emailField =
+        $("student-input-email");
+
+    if (!nameField || !emailField) {
+
+        showCWHToast(
+            "Login form not found.",
+            "error"
+        );
+
+        return false;
+    }
+
+    const name =
+        nameField.value.trim();
+
+    const email =
+        emailField.value.trim();
+
+    if (!name || !email) {
+
+        showCWHToast(
+            "Naam aur Gmail dono bharo.",
+            "error"
+        );
+
+        return false;
+    }
+
+    currentStudent.name =
+        name;
+
+    currentStudent.email =
+        email;
+
+    currentStudent.avatar =
+        "https://api.dicebear.com/7.x/bottts/svg?seed=" +
+        encodeURIComponent(name);
+
+    localStorage.setItem(
+        "cwh_student_name",
+        name
+    );
+
+    localStorage.setItem(
+        "cwh_student_email",
+        email
+    );
+
+    localStorage.setItem(
+        "cwh_student_avatar",
+        currentStudent.avatar
+    );
+
+    closeLoginModal();
+
+    playSFX("warp");
+
+    showWarpScreen();
+
+    return false;
+}
+
+
+// ============================================================
+// 11. WARP SCREEN
+// ============================================================
+
+function showWarpScreen() {
+
+    const old =
+        $("cwh-warp-screen");
+
+    if (old) {
+        old.remove();
+    }
+
+    const warp =
+        document.createElement("div");
+
+    warp.id =
+        "cwh-warp-screen";
+
+    warp.style.cssText = `
+        position:fixed;
+        inset:0;
+        z-index:999999;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        background:#22d3ee;
+        color:#000;
+        opacity:1;
+        transition:opacity .7s ease;
+    `;
+
+    warp.innerHTML = `
+
+        <div style="
+            font-family:Orbitron, sans-serif;
+            font-size:clamp(32px,8vw,80px);
+            font-weight:900;
+            letter-spacing:5px;
+            text-align:center;
+        ">
+            WARP SPEED 💥
+        </div>
+
+        <div style="
+            font-family:monospace;
+            font-size:12px;
+            font-weight:bold;
+            margin-top:15px;
+            letter-spacing:2px;
+            text-align:center;
+        ">
+            AUTHENTICATED:
+            ${escapeHTML(currentStudent.name.toUpperCase())}
+        </div>
+    `;
+
+    document.body.appendChild(warp);
+
+    setTimeout(function () {
+
+        updateStudentUI();
+
+        warp.style.opacity =
+            "0";
+
+        setTimeout(function () {
+
+            warp.remove();
+
+            openWorkspace();
+
+        }, 700);
+
+    }, 900);
+}
+
+
+// ============================================================
+// 12. UPDATE STUDENT UI
+// ============================================================
+
+function updateStudentUI() {
+
+    const displayName =
+        $("user-display-name");
+
+    const displayEmail =
+        $("user-email-display");
+
+    const avatar =
+        $("user-avatar");
+
+    if (displayName) {
+        displayName.innerText =
+            currentStudent.name;
+    }
+
+    if (displayEmail) {
+        displayEmail.innerText =
+            currentStudent.email;
+    }
+
+    if (avatar) {
+        avatar.src =
+            currentStudent.avatar;
     }
 }
 
-// ==========================================
-// 8. AI RESPONSE FORMATTER
-// ==========================================
+
+// ============================================================
+// 13. OPEN WORKSPACE
+// ============================================================
+
+function openWorkspace() {
+
+    const workspace =
+        $("ai-workspace");
+
+    if (!workspace) {
+
+        showCWHToast(
+            "AI Workspace HTML nahi mila.",
+            "error"
+        );
+
+        return;
+    }
+
+    updateStudentUI();
+
+    workspace.classList.remove(
+        "hidden"
+    );
+
+    document.body.classList.add(
+        "overflow-hidden"
+    );
+
+    initInputBoxStars();
+
+    setTimeout(function () {
+
+        const input =
+            $("workspace-query");
+
+        if (input) {
+            input.focus();
+        }
+
+    }, 150);
+
+    showCWHToast(
+        "AI Workspace ONLINE 🚀",
+        "success"
+    );
+}
+
+
+// ============================================================
+// 14. CLOSE WORKSPACE
+// ============================================================
+
+function closeWorkspace() {
+
+    const workspace =
+        $("ai-workspace");
+
+    if (workspace) {
+
+        workspace.classList.add(
+            "hidden"
+        );
+    }
+
+    document.body.classList.remove(
+        "overflow-hidden"
+    );
+
+    playSFX("beep");
+}
+
+
+// ============================================================
+// 15. FORMAT AI RESPONSE
+// ============================================================
 
 function formatAIResponse(rawText) {
-    if (!rawText) return "";
 
-    let text = String(rawText);
+    if (!rawText) {
+        return "";
+    }
+
+    let text =
+        String(rawText);
 
     const codeBlocks = [];
 
-    // Code blocks
+    // Extract fenced code blocks first
     text = text.replace(
         /```(?:[a-zA-Z0-9_+#.-]+)?\s*([\s\S]*?)```/g,
-        (match, code) => {
-            const index = codeBlocks.length;
+        function (match, code) {
+
+            const index =
+                codeBlocks.length;
 
             codeBlocks.push(`
-<pre class="bg-black/90 p-3 rounded-xl border border-cyan-500/40 my-3 overflow-x-auto text-xs text-cyan-300 font-mono leading-relaxed"><code>${escapeHTML(code.trim())}</code></pre>
-`);
+                <pre style="
+                    background:#020617;
+                    border:1px solid rgba(34,211,238,.3);
+                    border-radius:12px;
+                    padding:14px;
+                    margin:12px 0;
+                    overflow-x:auto;
+                    color:#67e8f9;
+                    font-size:11px;
+                    line-height:1.6;
+                    white-space:pre;
+                "><code>${escapeHTML(code.trim())}</code></pre>
+            `);
 
-            return `___CWH_CODE_BLOCK_${index}___`;
+            return `___CWH_CODE_${index}___`;
         }
     );
 
-    // Escape normal HTML
-    text = escapeHTML(text);
+    text =
+        escapeHTML(text);
 
     // Bold
-    text = text.replace(
-        /\*\*(.*?)\*\*/g,
-        '<strong class="text-cyan-400 font-bold">$1</strong>'
-    );
+    text =
+        text.replace(
+            /\*\*(.*?)\*\*/g,
+            '<strong style="color:#22d3ee;font-weight:800;">$1</strong>'
+        );
 
     // Inline code
-    text = text.replace(
-        /`([^`]+)`/g,
-        '<code class="bg-cyan-950/80 px-1.5 py-0.5 rounded text-cyan-300 text-xs font-mono">$1</code>'
-    );
+    text =
+        text.replace(
+            /`([^`]+)`/g,
+            '<code style="background:#083344;color:#67e8f9;padding:2px 6px;border-radius:5px;font-family:monospace;">$1</code>'
+        );
 
-    // Bullet points
-    text = text.replace(
-        /^\s*[-*]\s+(.*)$/gm,
-        '<div class="ml-4 my-1">• $1</div>'
-    );
+    // Bullets
+    text =
+        text.replace(
+            /^\s*[-*]\s+(.*)$/gm,
+            '<div style="margin:5px 0 5px 12px;">• $1</div>'
+        );
 
-    // Line breaks
-    text = text.replace(/\n/g, "<br>");
+    // Numbered lists
+    text =
+        text.replace(
+            /^\s*(\d+)\.\s+(.*)$/gm,
+            '<div style="margin:5px 0 5px 12px;"><b style="color:#22d3ee;">$1.</b> $2</div>'
+        );
+
+    text =
+        text.replace(
+            /\n/g,
+            "<br>"
+        );
 
     // Restore code
-    codeBlocks.forEach((block, index) => {
-        text = text.replace(
-            `___CWH_CODE_BLOCK_${index}___`,
-            block
-        );
-    });
+    codeBlocks.forEach(
+        function (block, index) {
+
+            text =
+                text.replace(
+                    `___CWH_CODE_${index}___`,
+                    block
+                );
+        }
+    );
 
     return text;
 }
 
-// ==========================================
-// 9. STUDENT PROFILE
-// ==========================================
 
-let currentStudent = {
-    name:
-        localStorage.getItem("cwh_student_name") ||
-        "Student Coder",
-
-    email:
-        localStorage.getItem("cwh_student_email") ||
-        "student@gmail.com",
-
-    avatar: ""
-};
-
-// ==========================================
-// 10. AI CHAT
-// ==========================================
+// ============================================================
+// 16. AI CHAT
+// ============================================================
 
 async function sendWorkspaceQuery() {
+
     const input =
-        document.getElementById("workspace-query");
+        $("workspace-query");
 
-    if (!input) return;
+    const stream =
+        $("chat-stream");
 
-    const promptText =
+    const status =
+        $("hologram-status");
+
+    if (!input) {
+
+        console.error(
+            "workspace-query not found"
+        );
+
+        return;
+    }
+
+    const prompt =
         input.value.trim();
 
-    if (!promptText) return;
+    if (!prompt) {
+
+        showCWHToast(
+            "Pehle kuch likho bhai 😄",
+            "info"
+        );
+
+        input.focus();
+
+        return;
+    }
 
     input.value = "";
 
-    const stream =
-        document.getElementById("chat-stream");
+    // User message
+    if (stream) {
 
-    const holoStatus =
-        document.getElementById("hologram-status");
+        const userMessage =
+            document.createElement("div");
 
-    if (holoStatus) {
-        holoStatus.innerText =
+        userMessage.className =
+            "flex justify-end my-2";
+
+        userMessage.innerHTML = `
+            <div class="
+                bg-cyan-950/80
+                border
+                border-cyan-500/40
+                px-4
+                py-2.5
+                rounded-2xl
+                max-w-xl
+                text-xs
+                sm:text-sm
+                text-cyan-200
+            ">
+                ${escapeHTML(prompt)}
+            </div>
+        `;
+
+        stream.appendChild(
+            userMessage
+        );
+
+        stream.scrollTop =
+            stream.scrollHeight;
+    }
+
+    if (status) {
+
+        status.innerText =
             "STATUS: GENERATING // NEURAL";
     }
 
-    // User message
-    if (stream) {
-        const userDiv =
-            document.createElement("div");
-
-        userDiv.className =
-            "flex justify-end my-2";
-
-        userDiv.innerHTML = `
-<div class="bg-cyan-950/80 border border-cyan-500/40 px-4 py-2.5 rounded-2xl max-w-xl text-xs sm:text-sm text-cyan-200">
-${escapeHTML(promptText)}
-</div>
-`;
-
-        stream.appendChild(userDiv);
-
-        stream.scrollTop =
-            stream.scrollHeight;
-    }
-
-    // Loading
-    const loadDiv =
+    const loader =
         document.createElement("div");
 
-    loadDiv.className =
+    loader.className =
         "text-xs text-slate-500 italic p-2";
 
-    loadDiv.innerText =
+    loader.innerText =
         "⚡ Harshit AI generating response...";
 
     if (stream) {
-        stream.appendChild(loadDiv);
+
+        stream.appendChild(
+            loader
+        );
 
         stream.scrollTop =
             stream.scrollHeight;
     }
 
-    let aiReply = "";
-
     try {
+
         const controller =
             new AbortController();
 
-        const timeoutId =
+        const timeout =
             setTimeout(
-                () => controller.abort(),
+                function () {
+                    controller.abort();
+                },
                 30000
             );
 
-        // IMPORTANT:
-        // Relative API path works on Render
-        // and local server.
+        const headers = {
+            "Content-Type":
+                "application/json"
+        };
+
+        // Optional custom API key.
+        // Backend must explicitly support this header.
+        if (customApiKey) {
+
+            headers[
+                "x-api-key"
+            ] = customApiKey;
+        }
+
         const response =
-            await fetch("/api/chat", {
-                method: "POST",
+            await fetch(
+                "/api/chat",
+                {
+                    method: "POST",
+                    headers: headers,
+                    body: JSON.stringify({
+                        message: prompt,
+                        studentName:
+                            currentStudent.name
+                    }),
+                    signal:
+                        controller.signal
+                }
+            );
 
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
-
-                body: JSON.stringify({
-                    message: promptText,
-                    studentName:
-                        currentStudent.name
-                }),
-
-                signal: controller.signal
-            });
-
-        clearTimeout(timeoutId);
+        clearTimeout(timeout);
 
         let data = {};
 
         try {
-            data = await response.json();
-        } catch {
+
+            data =
+                await response.json();
+
+        } catch (jsonError) {
+
             data = {};
         }
 
         if (!response.ok) {
+
             throw new Error(
                 data.error ||
                 `Server error (${response.status})`
@@ -443,255 +1101,325 @@ ${escapeHTML(promptText)}
         }
 
         if (!data.reply) {
+
             throw new Error(
                 "AI ne koi response nahi diya."
             );
         }
 
-        aiReply =
-            formatAIResponse(data.reply);
+        const formatted =
+            formatAIResponse(
+                data.reply
+            );
 
         incrementAIQueries();
 
+        addAIMessage(
+            formatted
+        );
+
+        playSFX("success");
+
     } catch (error) {
+
         console.error(
             "Harshit AI Error:",
             error
         );
 
-        if (error.name === "AbortError") {
-            aiReply = `
-<span class="text-red-400">
-⚠️ AI request timed out.
-</span>
-<br><br>
-<span class="text-slate-400 text-xs">
-Server ya AI response mein delay ho raha hai.
-</span>
-`;
+        let message = "";
+
+        if (
+            error.name ===
+            "AbortError"
+        ) {
+
+            message = `
+                <span style="color:#f87171;">
+                    ⚠️ AI request timeout.
+                </span>
+                <br><br>
+                <span style="color:#94a3b8;font-size:11px;">
+                    Server ya AI response mein delay ho raha hai.
+                </span>
+            `;
+
+        } else if (
+            error instanceof TypeError
+        ) {
+
+            message = `
+                <span style="color:#f87171;">
+                    ⚠️ Server connection failed.
+                </span>
+                <br><br>
+                <span style="color:#94a3b8;font-size:11px;">
+                    Check karo ki server.js run ho raha hai
+                    aur /api/chat route available hai.
+                </span>
+            `;
+
         } else {
-            aiReply = `
-<span class="text-red-400">
-⚠️ AI connection error
-</span>
-<br><br>
-<span class="text-slate-400 text-xs">
-${escapeHTML(error.message)}
-</span>
-`;
+
+            message = `
+                <span style="color:#f87171;">
+                    ⚠️ AI connection error
+                </span>
+                <br><br>
+                <span style="color:#94a3b8;font-size:11px;">
+                    ${escapeHTML(error.message)}
+                </span>
+            `;
         }
+
+        addAIMessage(
+            message
+        );
     }
 
-    if (loadDiv) {
-        loadDiv.remove();
+    if (loader) {
+        loader.remove();
     }
 
-    if (holoStatus) {
-        holoStatus.innerText =
+    if (status) {
+
+        status.innerText =
             "STATUS: ONLINE // READY";
     }
-
-    if (stream) {
-        const aiDiv =
-            document.createElement("div");
-
-        aiDiv.className =
-            "glass-cyber p-4 rounded-2xl border border-cyan-500/30 max-w-2xl text-xs sm:text-sm text-slate-200 leading-relaxed my-3";
-
-        aiDiv.innerHTML = `
-🤖 <b class="text-cyan-400">
-Harshit AI:
-</b>
-
-<div class="mt-2">
-${aiReply}
-</div>
-`;
-
-        stream.appendChild(aiDiv);
-
-        stream.scrollTop =
-            stream.scrollHeight;
-    }
 }
 
-// ==========================================
-// 11. LOGIN MODAL
-// ==========================================
 
-function openLoginModal() {
-    const modal =
-        document.getElementById("login-modal");
+// ============================================================
+// 17. ADD AI MESSAGE
+// ============================================================
 
-    if (modal) {
-        modal.classList.remove("hidden");
-    }
-}
+function addAIMessage(html) {
 
-function closeLoginModal() {
-    const modal =
-        document.getElementById("login-modal");
+    const stream =
+        $("chat-stream");
 
-    if (modal) {
-        modal.classList.add("hidden");
-    }
-}
+    if (!stream) return;
 
-function closeWorkspace() {
-    const workspace =
-        document.getElementById("ai-workspace");
-
-    if (workspace) {
-        workspace.classList.add("hidden");
-    }
-}
-
-// ==========================================
-// 12. STUDENT LOGIN
-// ==========================================
-
-function handleStudentLogin(e) {
-    if (e) {
-        e.preventDefault();
-    }
-
-    const nameField =
-        document.getElementById(
-            "student-input-name"
-        );
-
-    const emailField =
-        document.getElementById(
-            "student-input-email"
-        );
-
-    if (!nameField || !emailField) {
-        return;
-    }
-
-    const nameInput =
-        nameField.value.trim();
-
-    const emailInput =
-        emailField.value.trim();
-
-    if (!nameInput || !emailInput) {
-        return;
-    }
-
-    currentStudent.name =
-        nameInput;
-
-    currentStudent.email =
-        emailInput;
-
-    currentStudent.avatar =
-        `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(nameInput)}`;
-
-    localStorage.setItem(
-        "cwh_student_name",
-        currentStudent.name
-    );
-
-    localStorage.setItem(
-        "cwh_student_email",
-        currentStudent.email
-    );
-
-    closeLoginModal();
-
-    playSFX("warp");
-
-    const exp =
+    const aiDiv =
         document.createElement("div");
 
-    exp.className =
-        "fixed inset-0 z-50 bg-cyan-400 flex flex-col items-center justify-center transition-all duration-700 opacity-100";
+    aiDiv.className =
+        "glass-cyber p-4 rounded-2xl border border-cyan-500/30 max-w-2xl text-xs sm:text-sm text-slate-200 leading-relaxed my-3";
 
-    exp.innerHTML = `
-<h1 class="font-orbitron text-4xl sm:text-7xl font-black text-black tracking-widest uppercase animate-ping">
-WARP SPEED 💥
-</h1>
+    aiDiv.innerHTML = `
+        🤖
+        <b class="text-cyan-400">
+            Harshit AI:
+        </b>
 
-<p class="text-black font-mono font-bold text-xs sm:text-sm mt-4 tracking-widest">
-AUTHENTICATED:
-${escapeHTML(
-    currentStudent.name.toUpperCase()
-)}
-</p>
-`;
+        <div class="mt-2">
+            ${html}
+        </div>
+    `;
 
-    document.body.appendChild(exp);
+    stream.appendChild(
+        aiDiv
+    );
 
-    setTimeout(() => {
-        exp.style.opacity = "0";
-
-        setTimeout(() => {
-            exp.remove();
-        }, 700);
-
-        const displayName =
-            document.getElementById(
-                "user-display-name"
-            );
-
-        const displayEmail =
-            document.getElementById(
-                "user-email-display"
-            );
-
-        const avatar =
-            document.getElementById(
-                "user-avatar"
-            );
-
-        if (displayName) {
-            displayName.innerText =
-                currentStudent.name;
-        }
-
-        if (displayEmail) {
-            displayEmail.innerText =
-                currentStudent.email;
-        }
-
-        if (avatar) {
-            avatar.src =
-                currentStudent.avatar;
-        }
-
-        const workspace =
-            document.getElementById(
-                "ai-workspace"
-            );
-
-        if (workspace) {
-            workspace.classList.remove(
-                "hidden"
-            );
-        }
-
-        initInputBoxStars();
-
-    }, 800);
+    stream.scrollTop =
+        stream.scrollHeight;
 }
 
-// ==========================================
-// 13. STABLE STUDENT ID
-// ==========================================
+
+// ============================================================
+// 18. INPUT ENTER KEY
+// ============================================================
+
+function initChatInput() {
+
+    const input =
+        $("workspace-query");
+
+    if (!input) return;
+
+    input.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key === "Enter" &&
+                !event.shiftKey
+            ) {
+
+                event.preventDefault();
+
+                sendWorkspaceQuery();
+            }
+        }
+    );
+}
+
+
+// ============================================================
+// 19. FLOATING STARS
+// ============================================================
+
+function initInputBoxStars() {
+
+    const canvas =
+        $("input-star-canvas");
+
+    if (!canvas) return;
+
+    const ctx =
+        canvas.getContext("2d");
+
+    if (!ctx) return;
+
+    const parent =
+        canvas.parentElement;
+
+    if (!parent) return;
+
+    function resize() {
+
+        canvas.width =
+            parent.clientWidth;
+
+        canvas.height =
+            parent.clientHeight;
+    }
+
+    resize();
+
+    window.addEventListener(
+        "resize",
+        resize
+    );
+
+    const stars =
+        Array.from(
+            { length: 40 },
+            function () {
+
+                return {
+                    x:
+                        Math.random() *
+                        canvas.width,
+
+                    y:
+                        Math.random() *
+                        canvas.height,
+
+                    size:
+                        Math.random() *
+                        1.5 +
+                        0.4,
+
+                    vx:
+                        (Math.random() -
+                            0.5) *
+                        0.35,
+
+                    vy:
+                        (Math.random() -
+                            0.5) *
+                        0.35,
+
+                    alpha:
+                        Math.random() *
+                        0.6 +
+                        0.25
+                };
+            }
+        );
+
+    function draw() {
+
+        ctx.clearRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+        stars.forEach(
+            function (star) {
+
+                star.x +=
+                    star.vx;
+
+                star.y +=
+                    star.vy;
+
+                if (
+                    star.x < 0
+                ) {
+                    star.x =
+                        canvas.width;
+                }
+
+                if (
+                    star.x >
+                    canvas.width
+                ) {
+                    star.x = 0;
+                }
+
+                if (
+                    star.y < 0
+                ) {
+                    star.y =
+                        canvas.height;
+                }
+
+                if (
+                    star.y >
+                    canvas.height
+                ) {
+                    star.y = 0;
+                }
+
+                ctx.fillStyle =
+                    `rgba(56,189,248,${star.alpha})`;
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    star.x,
+                    star.y,
+                    star.size,
+                    0,
+                    Math.PI * 2
+                );
+
+                ctx.fill();
+            }
+        );
+
+        requestAnimationFrame(
+            draw
+        );
+    }
+
+    draw();
+}
+
+
+// ============================================================
+// 20. STABLE STUDENT ID
+// ============================================================
 
 function getStableStudentID() {
+
     let id =
         localStorage.getItem(
             "cwh_student_id"
         );
 
     if (!id) {
+
         id =
             "CWH-" +
             Math.floor(
                 100000 +
-                Math.random() * 900000
+                Math.random() *
+                900000
             );
 
         localStorage.setItem(
@@ -703,22 +1431,26 @@ function getStableStudentID() {
     return id;
 }
 
-// ==========================================
-// 14. GOLD STUDENT ID
-// ==========================================
+
+// ============================================================
+// 21. GOLD STUDENT ID
+// ============================================================
 
 function getGoldStudentID() {
+
     let id =
         localStorage.getItem(
             "cwh_gold_id"
         );
 
     if (!id) {
+
         id =
             "GOLD-" +
             Math.floor(
                 100000 +
-                Math.random() * 900000
+                Math.random() *
+                900000
             );
 
         localStorage.setItem(
@@ -730,60 +1462,76 @@ function getGoldStudentID() {
     return id;
 }
 
-// ==========================================
-// 15. STUDENT STATS
-// ==========================================
+
+// ============================================================
+// 22. STUDENT STATS
+// ============================================================
 
 function getStudentStats() {
+
     return {
-        queries: Number(
-            localStorage.getItem(
-                "cwh_queries"
-            ) || 0
-        ),
 
-        projects: Number(
-            localStorage.getItem(
-                "cwh_projects"
-            ) || 0
-        ),
+        queries:
+            Number(
+                localStorage.getItem(
+                    "cwh_queries"
+                ) || 0
+            ),
 
-        streak: Number(
-            localStorage.getItem(
-                "cwh_streak"
-            ) || 1
-        )
+        projects:
+            Number(
+                localStorage.getItem(
+                    "cwh_projects"
+                ) || 0
+            ),
+
+        streak:
+            Number(
+                localStorage.getItem(
+                    "cwh_streak"
+                ) || 1
+            )
     };
 }
 
+
 function incrementAIQueries() {
+
     const stats =
         getStudentStats();
 
     localStorage.setItem(
         "cwh_queries",
-        stats.queries + 1
+        String(stats.queries + 1)
     );
 }
 
-// ==========================================
-// 16. CYBER ID CARD
-// ==========================================
+
+// ============================================================
+// 23. CYBER ID CARD
+// ============================================================
 
 function generateCyberIDCard() {
+
     const modal =
-        document.getElementById(
-            "id-card-modal"
+        $("id-card-modal");
+
+    if (!modal) {
+
+        showCWHToast(
+            "Cyber ID modal HTML nahi mila.",
+            "error"
         );
 
-    if (!modal) return;
+        return;
+    }
 
-    modal.classList.remove("hidden");
+    modal.classList.remove(
+        "hidden"
+    );
 
     const canvas =
-        document.getElementById(
-            "cyber-id-canvas"
-        );
+        $("cyber-id-canvas");
 
     if (!canvas) return;
 
@@ -792,53 +1540,64 @@ function generateCyberIDCard() {
 
     if (!ctx) return;
 
-    const grad =
+    const width =
+        canvas.width;
+
+    const height =
+        canvas.height;
+
+    // Background
+    const gradient =
         ctx.createLinearGradient(
             0,
             0,
-            canvas.width,
-            canvas.height
+            width,
+            height
         );
 
-    grad.addColorStop(
+    gradient.addColorStop(
         0,
         "#030712"
     );
 
-    grad.addColorStop(
+    gradient.addColorStop(
         0.5,
         "#07182c"
     );
 
-    grad.addColorStop(
+    gradient.addColorStop(
         1,
         "#020617"
     );
 
-    ctx.fillStyle = grad;
+    ctx.fillStyle =
+        gradient;
 
     ctx.fillRect(
         0,
         0,
-        canvas.width,
-        canvas.height
+        width,
+        height
     );
 
+    // Border
     ctx.strokeStyle =
         "#06b6d4";
 
-    ctx.lineWidth = 4;
+    ctx.lineWidth =
+        4;
 
     ctx.strokeRect(
         10,
         10,
-        canvas.width - 20,
-        canvas.height - 20
+        width - 20,
+        height - 20
     );
 
     ctx.textAlign =
         "center";
 
+    // Title
     ctx.fillStyle =
         "#38bdf8";
 
@@ -847,7 +1606,7 @@ function generateCyberIDCard() {
 
     ctx.fillText(
         "CODE WITH HARSHIT",
-        canvas.width / 2,
+        width / 2,
         45
     );
 
@@ -859,15 +1618,16 @@ function generateCyberIDCard() {
 
     ctx.fillText(
         "STUDENT CYBER CODER PASS",
-        canvas.width / 2,
+        width / 2,
         65
     );
 
+    // Avatar box
     ctx.fillStyle =
         "#0f172a";
 
     ctx.fillRect(
-        canvas.width / 2 - 45,
+        width / 2 - 45,
         85,
         90,
         90
@@ -876,10 +1636,11 @@ function generateCyberIDCard() {
     ctx.strokeStyle =
         "#38bdf8";
 
-    ctx.lineWidth = 2;
+    ctx.lineWidth =
+        2;
 
     ctx.strokeRect(
-        canvas.width / 2 - 45,
+        width / 2 - 45,
         85,
         90,
         90
@@ -889,14 +1650,15 @@ function generateCyberIDCard() {
         "#38bdf8";
 
     ctx.font =
-        "36px monospace";
+        "36px sans-serif";
 
     ctx.fillText(
         "👨‍💻",
-        canvas.width / 2,
-        142
+        width / 2,
+        143
     );
 
+    // Name
     ctx.fillStyle =
         "#ffffff";
 
@@ -905,10 +1667,11 @@ function generateCyberIDCard() {
 
     ctx.fillText(
         currentStudent.name,
-        canvas.width / 2,
+        width / 2,
         210
     );
 
+    // Email
     ctx.fillStyle =
         "#38bdf8";
 
@@ -917,10 +1680,11 @@ function generateCyberIDCard() {
 
     ctx.fillText(
         currentStudent.email,
-        canvas.width / 2,
+        width / 2,
         230
     );
 
+    // Status
     ctx.fillStyle =
         "#10b981";
 
@@ -929,9 +1693,12 @@ function generateCyberIDCard() {
 
     ctx.fillText(
         "STATUS: VERIFIED STUDENT [LVL 01]",
-        canvas.width / 2,
+        width / 2,
         260
     );
+
+    const stats =
+        getStudentStats();
 
     ctx.fillStyle =
         "#94a3b8";
@@ -940,35 +1707,39 @@ function generateCyberIDCard() {
         "11px monospace";
 
     ctx.fillText(
-        "STREAK: 🔥 1 DAY ACTIVE",
-        canvas.width / 2,
+        `AI QUERIES: ${stats.queries}`,
+        width / 2,
         290
     );
 
     ctx.fillText(
         "TRACK: PYTHON • WEB • AI",
-        canvas.width / 2,
+        width / 2,
         315
     );
 
     ctx.fillText(
         `PASS ID: ${getStableStudentID()}`,
-        canvas.width / 2,
+        width / 2,
         340
     );
 
+    // Barcode
     ctx.fillStyle =
         "#38bdf8";
 
     for (
-        let i = 40;
-        i < 300;
-        i += 6
+        let x = 40;
+        x < width - 40;
+        x += 6
     ) {
+
         ctx.fillRect(
-            i,
+            x,
             370,
-            Math.random() > 0.3 ? 3 : 1,
+            Math.random() > 0.3
+                ? 3
+                : 1,
             32
         );
     }
@@ -981,57 +1752,109 @@ function generateCyberIDCard() {
 
     ctx.fillText(
         "ISSUED BY CODE WITH HARSHIT ACADEMY",
-        canvas.width / 2,
+        width / 2,
         430
     );
+
+    playSFX("success");
 }
 
+
+// ============================================================
+// 24. CLOSE CYBER ID
+// ============================================================
+
 function closeCyberIDModal() {
+
     const modal =
-        document.getElementById(
-            "id-card-modal"
-        );
+        $("id-card-modal");
 
     if (modal) {
-        modal.classList.add("hidden");
+
+        modal.classList.add(
+            "hidden"
+        );
     }
 }
 
+
+// ============================================================
+// 25. DOWNLOAD CYBER ID
+// ============================================================
+
 function downloadCyberID() {
+
     const canvas =
-        document.getElementById(
-            "cyber-id-canvas"
+        $("cyber-id-canvas");
+
+    if (!canvas) {
+
+        showCWHToast(
+            "ID card canvas nahi mila.",
+            "error"
         );
 
-    if (!canvas) return;
+        return;
+    }
 
-    const link =
-        document.createElement("a");
+    try {
 
-    link.download =
-        `${currentStudent.name.replace(
-            /\s+/g,
-            "_"
-        )}_CyberID.png`;
+        const link =
+            document.createElement("a");
 
-    link.href =
-        canvas.toDataURL("image/png");
+        const safeName =
+            currentStudent.name
+                .replace(
+                    /[^a-zA-Z0-9_-]/g,
+                    "_"
+                );
 
-    link.click();
+        link.download =
+            `${safeName}_CyberID.png`;
+
+        link.href =
+            canvas.toDataURL(
+                "image/png"
+            );
+
+        document.body.appendChild(
+            link
+        );
+
+        link.click();
+
+        link.remove();
+
+        showCWHToast(
+            "Cyber ID ready!",
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+        showCWHToast(
+            "ID download failed.",
+            "error"
+        );
+    }
 }
 
-// ==========================================
-// 17. GOLD ID CARD
-// ==========================================
+
+// ============================================================
+// 26. GOLD ID CARD
+// ============================================================
 
 function generateGoldIDCard() {
-    const existing =
-        document.getElementById(
-            "gold-id-modal"
-        );
 
-    if (existing) {
-        existing.remove();
+    const old =
+        $("gold-id-modal");
+
+    if (old) {
+        old.remove();
     }
 
     const goldID =
@@ -1044,125 +1867,149 @@ function generateGoldIDCard() {
         "gold-id-modal";
 
     modal.style.cssText = `
-position:fixed;
-inset:0;
-z-index:99998;
-display:flex;
-align-items:center;
-justify-content:center;
-background:rgba(0,0,0,.75);
-backdrop-filter:blur(8px);
-`;
+        position:fixed;
+        inset:0;
+        z-index:999998;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:rgba(0,0,0,.78);
+        backdrop-filter:blur(8px);
+        padding:20px;
+    `;
 
     modal.innerHTML = `
-<div style="
-width:min(420px,90vw);
-padding:30px;
-border-radius:24px;
-background:linear-gradient(145deg,#17130a,#090909);
-border:1px solid #facc15;
-box-shadow:0 0 35px rgba(250,204,21,.25);
-text-align:center;
-color:white;
-font-family:monospace;
-">
 
-<div style="
-font-size:12px;
-letter-spacing:4px;
-color:#facc15;
-">
-CODE WITH HARSHIT
-</div>
+        <div style="
+            width:min(420px,95vw);
+            padding:30px;
+            border-radius:24px;
+            background:linear-gradient(145deg,#17130a,#090909);
+            border:1px solid #facc15;
+            box-shadow:0 0 35px rgba(250,204,21,.25);
+            text-align:center;
+            color:white;
+            font-family:monospace;
+        ">
 
-<div style="
-font-size:32px;
-margin:18px 0;
-">
-🏆
-</div>
+            <div style="
+                font-size:12px;
+                letter-spacing:4px;
+                color:#facc15;
+            ">
+                CODE WITH HARSHIT
+            </div>
 
-<h2 style="
-margin:0;
-color:#fde68a;
-letter-spacing:2px;
-">
-GOLD STUDENT ID
-</h2>
+            <div style="
+                font-size:40px;
+                margin:18px 0;
+            ">
+                🏆
+            </div>
 
-<p style="color:#d4d4d4;">
-${escapeHTML(currentStudent.name)}
-</p>
+            <h2 style="
+                margin:0;
+                color:#fde68a;
+                letter-spacing:2px;
+            ">
+                GOLD STUDENT ID
+            </h2>
 
-<p style="color:#facc15;">
-${escapeHTML(currentStudent.email)}
-</p>
+            <p style="color:#d4d4d4;">
+                ${escapeHTML(currentStudent.name)}
+            </p>
 
-<div style="
-margin:22px 0;
-padding:14px;
-border:1px dashed #facc15;
-border-radius:12px;
-color:#fde68a;
-">
+            <p style="color:#facc15;">
+                ${escapeHTML(currentStudent.email)}
+            </p>
 
-GOLD PASS ID
-<br>
+            <div style="
+                margin:22px 0;
+                padding:14px;
+                border:1px dashed #facc15;
+                border-radius:12px;
+                color:#fde68a;
+            ">
 
-<strong>
-${escapeHTML(goldID)}
-</strong>
+                GOLD PASS ID
 
-</div>
+                <br>
 
-<p style="
-color:#a3a3a3;
-font-size:11px;
-">
-TRACK: PYTHON • WEB • AI
-</p>
+                <strong>
+                    ${goldID}
+                </strong>
 
-<button
-type="button"
-onclick="document.getElementById('gold-id-modal').remove()"
-style="
-margin-top:15px;
-padding:10px 22px;
-border:1px solid #facc15;
-border-radius:10px;
-background:transparent;
-color:#facc15;
-cursor:pointer;
-">
+            </div>
 
-CLOSE
+            <p style="
+                color:#a3a3a3;
+                font-size:11px;
+            ">
+                TRACK: PYTHON • WEB • AI
+            </p>
 
-</button>
+            <button
+                id="gold-close-button"
+                style="
+                    margin-top:15px;
+                    padding:10px 22px;
+                    border:1px solid #facc15;
+                    border-radius:10px;
+                    background:transparent;
+                    color:#facc15;
+                    cursor:pointer;
+                "
+            >
+                CLOSE
+            </button>
 
-</div>
-`;
+        </div>
+    `;
 
-    document.body.appendChild(modal);
+    document.body.appendChild(
+        modal
+    );
 
-    playSFX("beep");
+    const close =
+        $("gold-close-button");
+
+    if (close) {
+
+        close.onclick =
+            function () {
+                modal.remove();
+            };
+    }
+
+    modal.addEventListener(
+        "click",
+        function (e) {
+
+            if (e.target === modal) {
+                modal.remove();
+            }
+        }
+    );
+
+    playSFX("success");
 }
 
-// ==========================================
-// 18. STUDENT COMMAND CENTER
-// ==========================================
+
+// ============================================================
+// 27. STUDENT COMMAND CENTER
+// ============================================================
 
 function showStudentStats() {
+
+    const old =
+        $("cwh-stats-modal");
+
+    if (old) {
+        old.remove();
+    }
+
     const stats =
         getStudentStats();
-
-    const existing =
-        document.getElementById(
-            "cwh-stats-modal"
-        );
-
-    if (existing) {
-        existing.remove();
-    }
 
     const modal =
         document.createElement("div");
@@ -1171,145 +2018,142 @@ function showStudentStats() {
         "cwh-stats-modal";
 
     modal.style.cssText = `
-position:fixed;
-inset:0;
-z-index:99998;
-display:flex;
-align-items:center;
-justify-content:center;
-background:rgba(0,0,0,.75);
-backdrop-filter:blur(8px);
-`;
+        position:fixed;
+        inset:0;
+        z-index:999998;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:rgba(0,0,0,.78);
+        backdrop-filter:blur(8px);
+        padding:20px;
+    `;
 
     modal.innerHTML = `
-<div style="
-width:min(500px,90vw);
-padding:28px;
-border-radius:22px;
-background:#030712;
-border:1px solid #22d3ee;
-box-shadow:0 0 40px rgba(34,211,238,.2);
-color:white;
-font-family:monospace;
-">
 
-<h2 style="
-color:#22d3ee;
-text-align:center;
-">
-⚡ STUDENT COMMAND CENTER
-</h2>
+        <div style="
+            width:min(500px,95vw);
+            padding:28px;
+            border-radius:22px;
+            background:#030712;
+            border:1px solid #22d3ee;
+            box-shadow:0 0 40px rgba(34,211,238,.2);
+            color:white;
+            font-family:monospace;
+        ">
 
-<div style="
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:12px;
-margin-top:25px;
-">
+            <h2 style="
+                color:#22d3ee;
+                text-align:center;
+                margin:0;
+            ">
+                ⚡ STUDENT COMMAND CENTER
+            </h2>
 
-<div style="
-padding:18px 8px;
-text-align:center;
-border:1px solid #164e63;
-border-radius:14px;
-">
+            <div style="
+                display:grid;
+                grid-template-columns:repeat(3,1fr);
+                gap:12px;
+                margin-top:25px;
+            ">
 
-<div style="font-size:25px;">
-🧠
-</div>
+                <div style="
+                    padding:18px 8px;
+                    text-align:center;
+                    border:1px solid #164e63;
+                    border-radius:14px;
+                ">
+                    <div style="font-size:25px;">🧠</div>
+                    <strong>${stats.queries}</strong>
+                    <small style="
+                        display:block;
+                        color:#94a3b8;
+                        margin-top:5px;
+                    ">
+                        AI QUERIES
+                    </small>
+                </div>
 
-<strong>
-${stats.queries}
-</strong>
+                <div style="
+                    padding:18px 8px;
+                    text-align:center;
+                    border:1px solid #164e63;
+                    border-radius:14px;
+                ">
+                    <div style="font-size:25px;">🚀</div>
+                    <strong>${stats.projects}</strong>
+                    <small style="
+                        display:block;
+                        color:#94a3b8;
+                        margin-top:5px;
+                    ">
+                        PROJECTS
+                    </small>
+                </div>
 
-<small style="
-display:block;
-color:#94a3b8;
-">
-AI QUERIES
-</small>
+                <div style="
+                    padding:18px 8px;
+                    text-align:center;
+                    border:1px solid #164e63;
+                    border-radius:14px;
+                ">
+                    <div style="font-size:25px;">🔥</div>
+                    <strong>${stats.streak}</strong>
+                    <small style="
+                        display:block;
+                        color:#94a3b8;
+                        margin-top:5px;
+                    ">
+                        STREAK
+                    </small>
+                </div>
 
-</div>
+            </div>
 
-<div style="
-padding:18px 8px;
-text-align:center;
-border:1px solid #164e63;
-border-radius:14px;
-">
+            <button
+                id="cwh-stats-close"
+                style="
+                    display:block;
+                    margin:25px auto 0;
+                    padding:10px 25px;
+                    border:1px solid #22d3ee;
+                    border-radius:10px;
+                    background:transparent;
+                    color:#22d3ee;
+                    cursor:pointer;
+                "
+            >
+                CLOSE
+            </button>
 
-<div style="font-size:25px;">
-🚀
-</div>
+        </div>
+    `;
 
-<strong>
-${stats.projects}
-</strong>
+    document.body.appendChild(
+        modal
+    );
 
-<small style="
-display:block;
-color:#94a3b8;
-">
-PROJECTS
-</small>
+    const close =
+        $("cwh-stats-close");
 
-</div>
+    if (close) {
 
-<div style="
-padding:18px 8px;
-text-align:center;
-border:1px solid #164e63;
-border-radius:14px;
-">
+        close.onclick =
+            function () {
+                modal.remove();
+            };
+    }
 
-<div style="font-size:25px;">
-🔥
-</div>
-
-<strong>
-${stats.streak}
-</strong>
-
-<small style="
-display:block;
-color:#94a3b8;
-">
-STREAK
-</small>
-
-</div>
-
-</div>
-
-<button
-type="button"
-onclick="document.getElementById('cwh-stats-modal').remove()"
-style="
-display:block;
-margin:25px auto 0;
-padding:10px 25px;
-border:1px solid #22d3ee;
-border-radius:10px;
-background:transparent;
-color:#22d3ee;
-cursor:pointer;
-">
-
-CLOSE
-
-</button>
-
-</div>
-`;
-
-    document.body.appendChild(modal);
+    playSFX("beep");
 }
 
-// ==========================================
-// 19. PROJECT STATS
-// ==========================================
+
+// ============================================================
+// 28. PROJECT STATS
+// ============================================================
 
 function addProjectStat() {
+
     const current =
         Number(
             localStorage.getItem(
@@ -1319,30 +2163,30 @@ function addProjectStat() {
 
     localStorage.setItem(
         "cwh_projects",
-        current + 1
+        String(current + 1)
     );
 
     showCWHToast(
-        "Project added to your stats!",
+        "Project added to your stats! 🚀",
         "success"
     );
 }
 
-// ==========================================
-// 20. TOAST
-// ==========================================
+
+// ============================================================
+// 29. TOAST
+// ============================================================
 
 function showCWHToast(
     message,
     type = "info"
 ) {
-    const oldToast =
-        document.getElementById(
-            "cwh-toast"
-        );
 
-    if (oldToast) {
-        oldToast.remove();
+    const old =
+        $("cwh-toast");
+
+    if (old) {
+        old.remove();
     }
 
     const toast =
@@ -1351,77 +2195,289 @@ function showCWHToast(
     toast.id =
         "cwh-toast";
 
+    const icon =
+        type === "success"
+            ? "✓"
+            : type === "error"
+                ? "!"
+                : "⚡";
+
     toast.innerHTML = `
-<div style="
-display:flex;
-align-items:center;
-gap:10px;
-">
+        <div style="
+            display:flex;
+            align-items:center;
+            gap:10px;
+        ">
+            <span style="
+                font-size:20px;
+                font-weight:bold;
+            ">
+                ${icon}
+            </span>
 
-<span style="font-size:20px;">
-${type === "success" ? "✓" : "⚡"}
-</span>
-
-<span>
-${escapeHTML(message)}
-</span>
-
-</div>
-`;
+            <span>
+                ${escapeHTML(message)}
+            </span>
+        </div>
+    `;
 
     toast.style.cssText = `
-position:fixed;
-right:20px;
-bottom:25px;
-z-index:99999;
-padding:14px 20px;
-border:1px solid rgba(34,211,238,.6);
-border-radius:14px;
-background:rgba(3,7,18,.92);
-color:#67e8f9;
-font-family:monospace;
-font-size:13px;
-box-shadow:0 0 25px rgba(6,182,212,.25);
-backdrop-filter:blur(12px);
-transform:translateY(30px);
-opacity:0;
-transition:all .3s ease;
-`;
+        position:fixed;
+        right:20px;
+        bottom:25px;
+        z-index:9999999;
+        padding:14px 20px;
+        border:1px solid rgba(34,211,238,.6);
+        border-radius:14px;
+        background:rgba(3,7,18,.94);
+        color:#67e8f9;
+        font-family:monospace;
+        font-size:13px;
+        box-shadow:0 0 25px rgba(6,182,212,.25);
+        backdrop-filter:blur(12px);
+        transform:translateY(30px);
+        opacity:0;
+        transition:all .3s ease;
+    `;
 
-    document.body.appendChild(toast);
+    document.body.appendChild(
+        toast
+    );
 
-    requestAnimationFrame(() => {
-        toast.style.transform =
-            "translateY(0)";
+    requestAnimationFrame(
+        function () {
 
-        toast.style.opacity =
-            "1";
-    });
+            toast.style.transform =
+                "translateY(0)";
 
-    setTimeout(() => {
-        toast.style.opacity =
-            "0";
+            toast.style.opacity =
+                "1";
+        }
+    );
 
-        toast.style.transform =
-            "translateY(30px)";
+    setTimeout(
+        function () {
 
-        setTimeout(() => {
-            if (toast && toast.parentNode) {
-                toast.remove();
-            }
-        }, 300);
-    }, 2500);
+            toast.style.opacity =
+                "0";
+
+            toast.style.transform =
+                "translateY(30px)";
+
+            setTimeout(
+                function () {
+
+                    if (toast) {
+                        toast.remove();
+                    }
+
+                },
+                350
+            );
+
+        },
+        2500
+    );
 }
 
-// ==========================================
-// 21. GLOBAL WINDOW EXPORTS
-// ==========================================
 
-window.getStableStudentID =
-    getStableStudentID;
+// ============================================================
+// 30. RESTORE SAVED SETTINGS
+// ============================================================
 
-window.getGoldStudentID =
-    getGoldStudentID;
+function restoreSettings() {
+
+    const matrix =
+        localStorage.getItem(
+            "cwh_matrix_mode"
+        );
+
+    if (matrix === "on") {
+
+        document.body.classList.add(
+            "matrix-mode"
+        );
+    }
+
+    const status =
+        $("sfx-status");
+
+    if (status) {
+
+        status.innerText =
+            sfxEnabled
+                ? "SFX ON"
+                : "SFX MUTED";
+    }
+
+    updateStudentUI();
+}
+
+
+// ============================================================
+// 31. GSAP SCROLL SYSTEM
+// ============================================================
+
+function initScrollSystem() {
+
+    if (
+        typeof gsap === "undefined" ||
+        typeof ScrollTrigger === "undefined"
+    ) {
+        console.warn(
+            "GSAP / ScrollTrigger unavailable."
+        );
+
+        return;
+    }
+
+    try {
+
+        gsap.registerPlugin(
+            ScrollTrigger
+        );
+
+        // Camera animation only if webgl-engine
+        // created a global camera.
+        if (
+            typeof window.camera !==
+            "undefined"
+        ) {
+
+            gsap.to(
+                window.camera.position,
+                {
+                    z: -2500,
+                    ease: "none",
+
+                    scrollTrigger: {
+                        trigger:
+                            "#main-content",
+                        start:
+                            "top top",
+                        end:
+                            "bottom bottom",
+                        scrub: 1.2
+                    }
+                }
+            );
+        }
+
+    } catch (error) {
+
+        console.warn(
+            "GSAP initialization failed:",
+            error
+        );
+    }
+}
+
+
+// ============================================================
+// 32. BUTTON EVENT SYSTEM
+// ============================================================
+
+function initButtons() {
+
+    // Audio button
+    const audioButton =
+        $("audio-toggle");
+
+    if (audioButton) {
+
+        audioButton.addEventListener(
+            "click",
+            toggleAudio
+        );
+    }
+
+    // Close login by clicking outside
+    const loginModal =
+        $("login-modal");
+
+    if (loginModal) {
+
+        loginModal.addEventListener(
+            "click",
+            function (e) {
+
+                if (
+                    e.target ===
+                    loginModal
+                ) {
+                    closeLoginModal();
+                }
+            }
+        );
+    }
+
+    // Cyber ID outside click
+    const idModal =
+        $("id-card-modal");
+
+    if (idModal) {
+
+        idModal.addEventListener(
+            "click",
+            function (e) {
+
+                if (
+                    e.target ===
+                    idModal
+                ) {
+                    closeCyberIDModal();
+                }
+            }
+        );
+    }
+}
+
+
+// ============================================================
+// 33. EXPOSE EVERYTHING TO HTML
+// ============================================================
+// IMPORTANT:
+// Your HTML uses onclick="functionName()"
+// Therefore these MUST be on window.
+
+window.toggleMatrixMode =
+    toggleMatrixMode;
+
+window.playSFX =
+    playSFX;
+
+window.toggleAudio =
+    toggleAudio;
+
+window.configureApiKey =
+    configureApiKey;
+
+window.openLoginModal =
+    openLoginModal;
+
+window.closeLoginModal =
+    closeLoginModal;
+
+window.handleStudentLogin =
+    handleStudentLogin;
+
+window.openWorkspace =
+    openWorkspace;
+
+window.closeWorkspace =
+    closeWorkspace;
+
+window.sendWorkspaceQuery =
+    sendWorkspaceQuery;
+
+window.generateCyberIDCard =
+    generateCyberIDCard;
+
+window.closeCyberIDModal =
+    closeCyberIDModal;
+
+window.downloadCyberID =
+    downloadCyberID;
 
 window.generateGoldIDCard =
     generateGoldIDCard;
@@ -1435,109 +2491,75 @@ window.addProjectStat =
 window.showCWHToast =
     showCWHToast;
 
-window.sendWorkspaceQuery =
-    sendWorkspaceQuery;
+window.getStableStudentID =
+    getStableStudentID;
 
-window.handleStudentLogin =
-    handleStudentLogin;
+window.getGoldStudentID =
+    getGoldStudentID;
 
-window.openLoginModal =
-    openLoginModal;
+window.getStudentStats =
+    getStudentStats;
 
-window.closeLoginModal =
-    closeLoginModal;
 
-window.closeWorkspace =
-    closeWorkspace;
+// ============================================================
+// 34. STARTUP
+// ============================================================
 
-window.generateCyberIDCard =
-    generateCyberIDCard;
+function initApp() {
 
-window.closeCyberIDModal =
-    closeCyberIDModal;
+    console.log(
+        "%c⚡ CODE WITH HARSHIT",
+        "color:#22d3ee;font-size:20px;font-weight:bold;"
+    );
 
-window.downloadCyberID =
-    downloadCyberID;
+    console.log(
+        "%cCommand System ONLINE",
+        "color:#10b981;font-weight:bold;"
+    );
 
-window.toggleMatrixMode =
-    toggleMatrixMode;
+    console.log(
+        "Student ID:",
+        getStableStudentID()
+    );
 
-window.playSFX =
-    playSFX;
+    console.log(
+        "Gold ID:",
+        getGoldStudentID()
+    );
 
-// ==========================================
-// 22. DOM READY
-// ==========================================
+    initCursor();
 
-window.addEventListener(
-    "DOMContentLoaded",
-    () => {
+    initKeyboardShortcuts();
 
-        // Audio button
-        const audioToggleBtn =
-            document.getElementById(
-                "audio-toggle"
-            );
+    initButtons();
 
-        if (audioToggleBtn) {
-            audioToggleBtn.addEventListener(
-                "click",
-                () => {
+    initChatInput();
 
-                    sfxEnabled =
-                        !sfxEnabled;
+    restoreSettings();
 
-                    const status =
-                        document.getElementById(
-                            "sfx-status"
-                        );
+    initInputBoxStars();
 
-                    if (status) {
-                        status.innerText =
-                            sfxEnabled
-                                ? "SFX ON"
-                                : "SFX MUTED";
-                    }
+    initScrollSystem();
 
-                    if (sfxEnabled) {
-                        playSFX("beep");
-                    }
-                }
-            );
-        }
+    console.log(
+        "✅ All application systems initialized."
+    );
+}
 
-        // Initialize stars
-        initInputBoxStars();
 
-        // Initialize IDs
-        getStableStudentID();
-        getGoldStudentID();
+// DOM ready
+if (
+    document.readyState ===
+    "loading"
+) {
 
-        console.log(
-            "⚡ Code With Harshit Command System ONLINE"
-        );
+    document.addEventListener(
+        "DOMContentLoaded",
+        initApp
+    );
 
-        console.log(
-            "Cyber ID:",
-            getStableStudentID()
-        );
+} else {
 
-        console.log(
-            "Gold ID:",
-            getGoldStudentID()
-        );
-    }
-);
-
-// ==========================================
-// 23. WINDOW LOAD
-// ==========================================
-
-window.addEventListener(
-    "load",
-    () => {
-        initGSAPScroll();
-        initInputBoxStars();
-    }
-);
+    initApp();
+}
 ````
