@@ -1,7 +1,10 @@
 ````javascript
 // ==========================================
 // CODE WITH HARSHIT — APP.JS
+// Production + Localhost Safe Version
 // ==========================================
+
+"use strict";
 
 // ==========================================
 // 1. GLOBAL VARIABLES & CONFIG
@@ -11,9 +14,21 @@ let customApiKey = localStorage.getItem("harshit_ai_key") || "";
 let audioCtx = null;
 let sfxEnabled = true;
 
+// ==========================================
+// 2. SAFE HTML ESCAPE
+// ==========================================
+
+function escapeHTML(text) {
+    return String(text ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
 // ==========================================
-// 2. PLASMA CURSOR
+// 3. PLASMA CURSOR
 // ==========================================
 
 document.addEventListener("mousemove", (e) => {
@@ -31,10 +46,13 @@ document.addEventListener("mousemove", (e) => {
     }
 });
 
+// ==========================================
+// 4. MATRIX MODE
+// ==========================================
 
-// ==========================================
-// 3. MATRIX MODE — H KEY
-// ==========================================
+function toggleMatrixMode() {
+    document.body.classList.toggle("matrix-mode");
+}
 
 window.addEventListener("keydown", (e) => {
     if (e.key === "h" || e.key === "H") {
@@ -42,26 +60,22 @@ window.addEventListener("keydown", (e) => {
     }
 });
 
-function toggleMatrixMode() {
-    document.body.classList.toggle("matrix-mode");
-}
-
-
 // ==========================================
-// 4. AUDIO SYNTHESIZER
+// 5. AUDIO SYNTHESIZER
 // ==========================================
 
 function playSFX(type) {
-
     if (!sfxEnabled) return;
 
     try {
-
         if (!audioCtx) {
-            audioCtx = new (
+            const AudioContext =
                 window.AudioContext ||
-                window.webkitAudioContext
-            )();
+                window.webkitAudioContext;
+
+            if (!AudioContext) return;
+
+            audioCtx = new AudioContext();
         }
 
         if (audioCtx.state === "suspended") {
@@ -77,6 +91,7 @@ function playSFX(type) {
         const now = audioCtx.currentTime;
 
         if (type === "beep") {
+            osc.type = "sine";
 
             osc.frequency.setValueAtTime(800, now);
             osc.frequency.exponentialRampToValueAtTime(
@@ -92,11 +107,9 @@ function playSFX(type) {
 
             osc.start(now);
             osc.stop(now + 0.08);
-
         }
 
         if (type === "warp") {
-
             osc.type = "sawtooth";
 
             osc.frequency.setValueAtTime(120, now);
@@ -114,81 +127,16 @@ function playSFX(type) {
             osc.start(now);
             osc.stop(now + 0.8);
         }
-
     } catch (error) {
-        console.warn("Audio unavailable");
+        console.warn("Audio unavailable:", error);
     }
 }
-
-
-const audioToggleBtn =
-    document.getElementById("audio-toggle");
-
-if (audioToggleBtn) {
-
-    audioToggleBtn.addEventListener("click", () => {
-
-        sfxEnabled = !sfxEnabled;
-
-        const status =
-            document.getElementById("sfx-status");
-
-        if (status) {
-            status.innerText =
-                sfxEnabled ? "SFX ON" : "SFX MUTED";
-        }
-
-        if (sfxEnabled) {
-            playSFX("beep");
-        }
-
-    });
-}
-
-
-// ==========================================
-// 5. GSAP SCROLL CAMERA ZOOM
-// ==========================================
-
-window.addEventListener("load", () => {
-
-    if (
-        typeof gsap !== "undefined" &&
-        typeof ScrollTrigger !== "undefined"
-    ) {
-
-        gsap.registerPlugin(ScrollTrigger);
-
-        initInputBoxStars();
-
-        if (typeof camera !== "undefined") {
-
-            gsap.to(camera.position, {
-
-                z: -2500,
-
-                ease: "none",
-
-                scrollTrigger: {
-                    trigger: "#main-content",
-                    start: "top top",
-                    end: "bottom bottom",
-                    scrub: 1.2
-                }
-
-            });
-        }
-    }
-
-});
-
 
 // ==========================================
 // 6. FLOATING STARS
 // ==========================================
 
 function initInputBoxStars() {
-
     const canvas =
         document.getElementById("input-star-canvas");
 
@@ -199,7 +147,6 @@ function initInputBoxStars() {
     if (!ctx) return;
 
     function resize() {
-
         if (!canvas.parentElement) return;
 
         canvas.width =
@@ -216,26 +163,16 @@ function initInputBoxStars() {
     const stars = Array.from(
         { length: 35 },
         () => ({
-
             x: Math.random() * canvas.width,
-
             y: Math.random() * canvas.height,
-
             size: Math.random() * 1.5 + 0.5,
-
-            speedX:
-                (Math.random() - 0.5) * 0.4,
-
-            speedY:
-                (Math.random() - 0.5) * 0.4,
-
-            alpha:
-                Math.random() * 0.7 + 0.3
+            speedX: (Math.random() - 0.5) * 0.4,
+            speedY: (Math.random() - 0.5) * 0.4,
+            alpha: Math.random() * 0.7 + 0.3
         })
     );
 
     function draw() {
-
         ctx.clearRect(
             0,
             0,
@@ -244,21 +181,24 @@ function initInputBoxStars() {
         );
 
         stars.forEach((star) => {
-
             star.x += star.speedX;
             star.y += star.speedY;
 
-            if (star.x < 0)
+            if (star.x < 0) {
                 star.x = canvas.width;
+            }
 
-            if (star.x > canvas.width)
+            if (star.x > canvas.width) {
                 star.x = 0;
+            }
 
-            if (star.y < 0)
+            if (star.y < 0) {
                 star.y = canvas.height;
+            }
 
-            if (star.y > canvas.height)
+            if (star.y > canvas.height) {
                 star.y = 0;
+            }
 
             ctx.fillStyle =
                 `rgba(56,189,248,${star.alpha})`;
@@ -274,7 +214,6 @@ function initInputBoxStars() {
             );
 
             ctx.fill();
-
         });
 
         requestAnimationFrame(draw);
@@ -283,40 +222,57 @@ function initInputBoxStars() {
     draw();
 }
 
-
 // ==========================================
-// 7. AI RESPONSE FORMATTER
+// 7. GSAP SCROLL CAMERA ZOOM
 // ==========================================
 
-function escapeHTML(text) {
+function initGSAPScroll() {
+    if (
+        typeof gsap === "undefined" ||
+        typeof ScrollTrigger === "undefined"
+    ) {
+        console.warn("GSAP / ScrollTrigger not found.");
+        return;
+    }
 
-    return String(text)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+    gsap.registerPlugin(ScrollTrigger);
+
+    if (typeof camera !== "undefined") {
+        gsap.to(camera.position, {
+            z: -2500,
+            ease: "none",
+            scrollTrigger: {
+                trigger: "#main-content",
+                start: "top top",
+                end: "bottom bottom",
+                scrub: 1.2
+            }
+        });
+    }
 }
 
+// ==========================================
+// 8. AI RESPONSE FORMATTER
+// ==========================================
 
 function formatAIResponse(rawText) {
-
     if (!rawText) return "";
 
     let text = String(rawText);
 
-    // Protect code blocks
     const codeBlocks = [];
 
+    // Code blocks
     text = text.replace(
-        /```(?:[a-zA-Z0-9_-]+)?\s*([\s\S]*?)```/g,
+        /```(?:[a-zA-Z0-9_+#.-]+)?\s*([\s\S]*?)```/g,
         (match, code) => {
-
             const index = codeBlocks.length;
 
             codeBlocks.push(`
 <pre class="bg-black/90 p-3 rounded-xl border border-cyan-500/40 my-3 overflow-x-auto text-xs text-cyan-300 font-mono leading-relaxed"><code>${escapeHTML(code.trim())}</code></pre>
 `);
 
-            return `___CODE_BLOCK_${index}___`;
+            return `___CWH_CODE_BLOCK_${index}___`;
         }
     );
 
@@ -335,7 +291,7 @@ function formatAIResponse(rawText) {
         '<code class="bg-cyan-950/80 px-1.5 py-0.5 rounded text-cyan-300 text-xs font-mono">$1</code>'
     );
 
-    // Bullets
+    // Bullet points
     text = text.replace(
         /^\s*[-*]\s+(.*)$/gm,
         '<div class="ml-4 my-1">• $1</div>'
@@ -344,46 +300,38 @@ function formatAIResponse(rawText) {
     // Line breaks
     text = text.replace(/\n/g, "<br>");
 
-    // Restore code blocks
+    // Restore code
     codeBlocks.forEach((block, index) => {
-
         text = text.replace(
-            `___CODE_BLOCK_${index}___`,
+            `___CWH_CODE_BLOCK_${index}___`,
             block
         );
-
     });
 
     return text;
 }
 
-
 // ==========================================
-// 8. STUDENT PROFILE
+// 9. STUDENT PROFILE
 // ==========================================
 
 let currentStudent = {
-
     name:
-        localStorage.getItem(
-            "cwh_student_name"
-        ) || "Student Coder",
+        localStorage.getItem("cwh_student_name") ||
+        "Student Coder",
 
     email:
-        localStorage.getItem(
-            "cwh_student_email"
-        ) || "student@gmail.com",
+        localStorage.getItem("cwh_student_email") ||
+        "student@gmail.com",
 
     avatar: ""
 };
 
-
 // ==========================================
-// 9. REAL AI CHAT
+// 10. AI CHAT
 // ==========================================
 
 async function sendWorkspaceQuery() {
-
     const input =
         document.getElementById("workspace-query");
 
@@ -400,22 +348,15 @@ async function sendWorkspaceQuery() {
         document.getElementById("chat-stream");
 
     const holoStatus =
-        document.getElementById(
-            "hologram-status"
-        );
+        document.getElementById("hologram-status");
 
     if (holoStatus) {
         holoStatus.innerText =
             "STATUS: GENERATING // NEURAL";
     }
 
-
-    // ======================================
-    // USER MESSAGE
-    // ======================================
-
+    // User message
     if (stream) {
-
         const userDiv =
             document.createElement("div");
 
@@ -434,11 +375,7 @@ ${escapeHTML(promptText)}
             stream.scrollHeight;
     }
 
-
-    // ======================================
-    // LOADING
-    // ======================================
-
+    // Loading
     const loadDiv =
         document.createElement("div");
 
@@ -449,41 +386,29 @@ ${escapeHTML(promptText)}
         "⚡ Harshit AI generating response...";
 
     if (stream) {
-
         stream.appendChild(loadDiv);
 
         stream.scrollTop =
             stream.scrollHeight;
     }
 
-
     let aiReply = "";
 
-
-    // ======================================
-    // BACKEND REQUEST
-    // ======================================
-
     try {
-
         const controller =
             new AbortController();
 
         const timeoutId =
             setTimeout(
                 () => controller.abort(),
-                20000
+                30000
             );
 
-
         // IMPORTANT:
-        // localhost nahi.
-        // Render + localhost dono ke liye
-        // relative API path.
-
+        // Relative API path works on Render
+        // and local server.
         const response =
             await fetch("/api/chat", {
-
                 method: "POST",
 
                 headers: {
@@ -492,9 +417,7 @@ ${escapeHTML(promptText)}
                 },
 
                 body: JSON.stringify({
-
                     message: promptText,
-
                     studentName:
                         currentStudent.name
                 }),
@@ -502,9 +425,7 @@ ${escapeHTML(promptText)}
                 signal: controller.signal
             });
 
-
         clearTimeout(timeoutId);
-
 
         let data = {};
 
@@ -514,43 +435,31 @@ ${escapeHTML(promptText)}
             data = {};
         }
 
-
         if (!response.ok) {
-
             throw new Error(
                 data.error ||
                 `Server error (${response.status})`
             );
         }
 
-
         if (!data.reply) {
-
             throw new Error(
                 "AI ne koi response nahi diya."
             );
         }
-
 
         aiReply =
             formatAIResponse(data.reply);
 
         incrementAIQueries();
 
-
     } catch (error) {
-
         console.error(
             "Harshit AI Error:",
             error
         );
 
-
-        if (
-            error.name ===
-            "AbortError"
-        ) {
-
+        if (error.name === "AbortError") {
             aiReply = `
 <span class="text-red-400">
 ⚠️ AI request timed out.
@@ -560,9 +469,7 @@ ${escapeHTML(promptText)}
 Server ya AI response mein delay ho raha hai.
 </span>
 `;
-
         } else {
-
             aiReply = `
 <span class="text-red-400">
 ⚠️ AI connection error
@@ -572,31 +479,19 @@ Server ya AI response mein delay ho raha hai.
 ${escapeHTML(error.message)}
 </span>
 `;
-
         }
     }
 
-
-    // ======================================
-    // REMOVE LOADER
-    // ======================================
-
-    loadDiv.remove();
-
+    if (loadDiv) {
+        loadDiv.remove();
+    }
 
     if (holoStatus) {
-
         holoStatus.innerText =
             "STATUS: ONLINE // READY";
     }
 
-
-    // ======================================
-    // AI MESSAGE
-    // ======================================
-
     if (stream) {
-
         const aiDiv =
             document.createElement("div");
 
@@ -618,58 +513,47 @@ ${aiReply}
         stream.scrollTop =
             stream.scrollHeight;
     }
-
 }
 
-
 // ==========================================
-// 10. LOGIN MODAL
+// 11. LOGIN MODAL
 // ==========================================
 
 function openLoginModal() {
-
     const modal =
-        document.getElementById(
-            "login-modal"
-        );
+        document.getElementById("login-modal");
 
-    if (modal)
+    if (modal) {
         modal.classList.remove("hidden");
+    }
 }
-
 
 function closeLoginModal() {
-
     const modal =
-        document.getElementById(
-            "login-modal"
-        );
+        document.getElementById("login-modal");
 
-    if (modal)
+    if (modal) {
         modal.classList.add("hidden");
+    }
 }
-
 
 function closeWorkspace() {
-
     const workspace =
-        document.getElementById(
-            "ai-workspace"
-        );
+        document.getElementById("ai-workspace");
 
-    if (workspace)
+    if (workspace) {
         workspace.classList.add("hidden");
+    }
 }
 
-
 // ==========================================
-// 11. STUDENT LOGIN
+// 12. STUDENT LOGIN
 // ==========================================
 
 function handleStudentLogin(e) {
-
-    if (e)
+    if (e) {
         e.preventDefault();
+    }
 
     const nameField =
         document.getElementById(
@@ -681,9 +565,9 @@ function handleStudentLogin(e) {
             "student-input-email"
         );
 
-    if (!nameField || !emailField)
+    if (!nameField || !emailField) {
         return;
-
+    }
 
     const nameInput =
         nameField.value.trim();
@@ -691,10 +575,9 @@ function handleStudentLogin(e) {
     const emailInput =
         emailField.value.trim();
 
-
-    if (!nameInput || !emailInput)
+    if (!nameInput || !emailInput) {
         return;
-
+    }
 
     currentStudent.name =
         nameInput;
@@ -704,7 +587,6 @@ function handleStudentLogin(e) {
 
     currentStudent.avatar =
         `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(nameInput)}`;
-
 
     localStorage.setItem(
         "cwh_student_name",
@@ -716,15 +598,9 @@ function handleStudentLogin(e) {
         currentStudent.email
     );
 
-
     closeLoginModal();
 
     playSFX("warp");
-
-
-    // ======================================
-    // WARP SCREEN
-    // ======================================
 
     const exp =
         document.createElement("div");
@@ -733,29 +609,26 @@ function handleStudentLogin(e) {
         "fixed inset-0 z-50 bg-cyan-400 flex flex-col items-center justify-center transition-all duration-700 opacity-100";
 
     exp.innerHTML = `
-
 <h1 class="font-orbitron text-4xl sm:text-7xl font-black text-black tracking-widest uppercase animate-ping">
 WARP SPEED 💥
 </h1>
 
 <p class="text-black font-mono font-bold text-xs sm:text-sm mt-4 tracking-widest">
 AUTHENTICATED:
-${escapeHTML(currentStudent.name.toUpperCase())}
+${escapeHTML(
+    currentStudent.name.toUpperCase()
+)}
 </p>
-
 `;
 
     document.body.appendChild(exp);
 
-
     setTimeout(() => {
-
         exp.style.opacity = "0";
 
         setTimeout(() => {
             exp.remove();
         }, 700);
-
 
         const displayName =
             document.getElementById(
@@ -772,52 +645,48 @@ ${escapeHTML(currentStudent.name.toUpperCase())}
                 "user-avatar"
             );
 
-
-        if (displayName)
+        if (displayName) {
             displayName.innerText =
                 currentStudent.name;
+        }
 
-        if (displayEmail)
+        if (displayEmail) {
             displayEmail.innerText =
                 currentStudent.email;
+        }
 
-        if (avatar)
+        if (avatar) {
             avatar.src =
                 currentStudent.avatar;
-
+        }
 
         const workspace =
             document.getElementById(
                 "ai-workspace"
             );
 
-        if (workspace)
+        if (workspace) {
             workspace.classList.remove(
                 "hidden"
             );
-
+        }
 
         initInputBoxStars();
 
     }, 800);
-
 }
 
-
 // ==========================================
-// 12. STABLE STUDENT ID
+// 13. STABLE STUDENT ID
 // ==========================================
 
 function getStableStudentID() {
-
     let id =
         localStorage.getItem(
             "cwh_student_id"
         );
 
-
     if (!id) {
-
         id =
             "CWH-" +
             Math.floor(
@@ -831,25 +700,20 @@ function getStableStudentID() {
         );
     }
 
-
     return id;
 }
 
-
 // ==========================================
-// 13. GOLD STUDENT ID
+// 14. GOLD STUDENT ID
 // ==========================================
 
 function getGoldStudentID() {
-
     let id =
         localStorage.getItem(
             "cwh_gold_id"
         );
 
-
     if (!id) {
-
         id =
             "GOLD-" +
             Math.floor(
@@ -863,45 +727,36 @@ function getGoldStudentID() {
         );
     }
 
-
     return id;
 }
 
-
 // ==========================================
-// 14. STUDENT STATS
+// 15. STUDENT STATS
 // ==========================================
 
 function getStudentStats() {
-
     return {
+        queries: Number(
+            localStorage.getItem(
+                "cwh_queries"
+            ) || 0
+        ),
 
-        queries:
-            Number(
-                localStorage.getItem(
-                    "cwh_queries"
-                ) || 0
-            ),
+        projects: Number(
+            localStorage.getItem(
+                "cwh_projects"
+            ) || 0
+        ),
 
-        projects:
-            Number(
-                localStorage.getItem(
-                    "cwh_projects"
-                ) || 0
-            ),
-
-        streak:
-            Number(
-                localStorage.getItem(
-                    "cwh_streak"
-                ) || 1
-            )
+        streak: Number(
+            localStorage.getItem(
+                "cwh_streak"
+            ) || 1
+        )
     };
 }
 
-
 function incrementAIQueries() {
-
     const stats =
         getStudentStats();
 
@@ -911,13 +766,11 @@ function incrementAIQueries() {
     );
 }
 
-
 // ==========================================
-// 15. CYBER ID CARD
+// 16. CYBER ID CARD
 // ==========================================
 
 function generateCyberIDCard() {
-
     const modal =
         document.getElementById(
             "id-card-modal"
@@ -927,7 +780,6 @@ function generateCyberIDCard() {
 
     modal.classList.remove("hidden");
 
-
     const canvas =
         document.getElementById(
             "cyber-id-canvas"
@@ -935,12 +787,10 @@ function generateCyberIDCard() {
 
     if (!canvas) return;
 
-
     const ctx =
         canvas.getContext("2d");
 
     if (!ctx) return;
-
 
     const grad =
         ctx.createLinearGradient(
@@ -949,7 +799,6 @@ function generateCyberIDCard() {
             canvas.width,
             canvas.height
         );
-
 
     grad.addColorStop(
         0,
@@ -966,7 +815,6 @@ function generateCyberIDCard() {
         "#020617"
     );
 
-
     ctx.fillStyle = grad;
 
     ctx.fillRect(
@@ -975,7 +823,6 @@ function generateCyberIDCard() {
         canvas.width,
         canvas.height
     );
-
 
     ctx.strokeStyle =
         "#06b6d4";
@@ -989,10 +836,8 @@ function generateCyberIDCard() {
         canvas.height - 20
     );
 
-
     ctx.textAlign =
         "center";
-
 
     ctx.fillStyle =
         "#38bdf8";
@@ -1006,7 +851,6 @@ function generateCyberIDCard() {
         45
     );
 
-
     ctx.fillStyle =
         "#94a3b8";
 
@@ -1019,7 +863,6 @@ function generateCyberIDCard() {
         65
     );
 
-
     ctx.fillStyle =
         "#0f172a";
 
@@ -1029,7 +872,6 @@ function generateCyberIDCard() {
         90,
         90
     );
-
 
     ctx.strokeStyle =
         "#38bdf8";
@@ -1043,7 +885,6 @@ function generateCyberIDCard() {
         90
     );
 
-
     ctx.fillStyle =
         "#38bdf8";
 
@@ -1055,7 +896,6 @@ function generateCyberIDCard() {
         canvas.width / 2,
         142
     );
-
 
     ctx.fillStyle =
         "#ffffff";
@@ -1069,7 +909,6 @@ function generateCyberIDCard() {
         210
     );
 
-
     ctx.fillStyle =
         "#38bdf8";
 
@@ -1082,7 +921,6 @@ function generateCyberIDCard() {
         230
     );
 
-
     ctx.fillStyle =
         "#10b981";
 
@@ -1094,7 +932,6 @@ function generateCyberIDCard() {
         canvas.width / 2,
         260
     );
-
 
     ctx.fillStyle =
         "#94a3b8";
@@ -1114,24 +951,20 @@ function generateCyberIDCard() {
         315
     );
 
-
     ctx.fillText(
         `PASS ID: ${getStableStudentID()}`,
         canvas.width / 2,
         340
     );
 
-
     ctx.fillStyle =
         "#38bdf8";
-
 
     for (
         let i = 40;
         i < 300;
         i += 6
     ) {
-
         ctx.fillRect(
             i,
             370,
@@ -1139,7 +972,6 @@ function generateCyberIDCard() {
             32
         );
     }
-
 
     ctx.fillStyle =
         "#64748b";
@@ -1154,21 +986,18 @@ function generateCyberIDCard() {
     );
 }
 
-
 function closeCyberIDModal() {
-
     const modal =
         document.getElementById(
             "id-card-modal"
         );
 
-    if (modal)
+    if (modal) {
         modal.classList.add("hidden");
+    }
 }
 
-
 function downloadCyberID() {
-
     const canvas =
         document.getElementById(
             "cyber-id-canvas"
@@ -1176,66 +1005,56 @@ function downloadCyberID() {
 
     if (!canvas) return;
 
-
     const link =
         document.createElement("a");
 
-
     link.download =
-        `${currentStudent.name.replace(/\s+/g, "_")}_CyberID.png`;
-
+        `${currentStudent.name.replace(
+            /\s+/g,
+            "_"
+        )}_CyberID.png`;
 
     link.href =
-        canvas.toDataURL(
-            "image/png"
-        );
-
+        canvas.toDataURL("image/png");
 
     link.click();
 }
 
-
 // ==========================================
-// 16. GOLD ID CARD
+// 17. GOLD ID CARD
 // ==========================================
 
 function generateGoldIDCard() {
-
     const existing =
         document.getElementById(
             "gold-id-modal"
         );
 
-    if (existing)
+    if (existing) {
         existing.remove();
-
+    }
 
     const goldID =
         getGoldStudentID();
 
-
     const modal =
         document.createElement("div");
-
 
     modal.id =
         "gold-id-modal";
 
-
     modal.style.cssText = `
-        position:fixed;
-        inset:0;
-        z-index:99998;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        background:rgba(0,0,0,.75);
-        backdrop-filter:blur(8px);
-    `;
-
+position:fixed;
+inset:0;
+z-index:99998;
+display:flex;
+align-items:center;
+justify-content:center;
+background:rgba(0,0,0,.75);
+backdrop-filter:blur(8px);
+`;
 
     modal.innerHTML = `
-
 <div style="
 width:min(420px,90vw);
 padding:30px;
@@ -1291,7 +1110,7 @@ GOLD PASS ID
 <br>
 
 <strong>
-${goldID}
+${escapeHTML(goldID)}
 </strong>
 
 </div>
@@ -1304,6 +1123,7 @@ TRACK: PYTHON • WEB • AI
 </p>
 
 <button
+type="button"
 onclick="document.getElementById('gold-id-modal').remove()"
 style="
 margin-top:15px;
@@ -1320,58 +1140,48 @@ CLOSE
 </button>
 
 </div>
-
 `;
-
 
     document.body.appendChild(modal);
 
     playSFX("beep");
 }
 
-
 // ==========================================
-// 17. STUDENT COMMAND CENTER
+// 18. STUDENT COMMAND CENTER
 // ==========================================
 
 function showStudentStats() {
-
     const stats =
         getStudentStats();
-
 
     const existing =
         document.getElementById(
             "cwh-stats-modal"
         );
 
-
-    if (existing)
+    if (existing) {
         existing.remove();
-
+    }
 
     const modal =
         document.createElement("div");
 
-
     modal.id =
         "cwh-stats-modal";
 
-
     modal.style.cssText = `
-        position:fixed;
-        inset:0;
-        z-index:99998;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        background:rgba(0,0,0,.75);
-        backdrop-filter:blur(8px);
-    `;
-
+position:fixed;
+inset:0;
+z-index:99998;
+display:flex;
+align-items:center;
+justify-content:center;
+background:rgba(0,0,0,.75);
+backdrop-filter:blur(8px);
+`;
 
     modal.innerHTML = `
-
 <div style="
 width:min(500px,90vw);
 padding:28px;
@@ -1387,11 +1197,8 @@ font-family:monospace;
 color:#22d3ee;
 text-align:center;
 ">
-
 ⚡ STUDENT COMMAND CENTER
-
 </h2>
-
 
 <div style="
 display:grid;
@@ -1399,7 +1206,6 @@ grid-template-columns:repeat(3,1fr);
 gap:12px;
 margin-top:25px;
 ">
-
 
 <div style="
 padding:18px 8px;
@@ -1420,13 +1226,10 @@ ${stats.queries}
 display:block;
 color:#94a3b8;
 ">
-
 AI QUERIES
-
 </small>
 
 </div>
-
 
 <div style="
 padding:18px 8px;
@@ -1447,13 +1250,10 @@ ${stats.projects}
 display:block;
 color:#94a3b8;
 ">
-
 PROJECTS
-
 </small>
 
 </div>
-
 
 <div style="
 padding:18px 8px;
@@ -1474,17 +1274,15 @@ ${stats.streak}
 display:block;
 color:#94a3b8;
 ">
-
 STREAK
-
 </small>
 
 </div>
 
 </div>
 
-
 <button
+type="button"
 onclick="document.getElementById('cwh-stats-modal').remove()"
 style="
 display:block;
@@ -1502,20 +1300,16 @@ CLOSE
 </button>
 
 </div>
-
 `;
-
 
     document.body.appendChild(modal);
 }
 
-
 // ==========================================
-// 18. PROJECT STATS
+// 19. PROJECT STATS
 // ==========================================
 
 function addProjectStat() {
-
     const current =
         Number(
             localStorage.getItem(
@@ -1523,12 +1317,10 @@ function addProjectStat() {
             ) || 0
         );
 
-
     localStorage.setItem(
         "cwh_projects",
         current + 1
     );
-
 
     showCWHToast(
         "Project added to your stats!",
@@ -1536,48 +1328,38 @@ function addProjectStat() {
     );
 }
 
-
 // ==========================================
-// 19. TOAST
+// 20. TOAST
 // ==========================================
 
 function showCWHToast(
     message,
     type = "info"
 ) {
-
     const oldToast =
         document.getElementById(
             "cwh-toast"
         );
 
-
-    if (oldToast)
+    if (oldToast) {
         oldToast.remove();
-
+    }
 
     const toast =
         document.createElement("div");
 
-
     toast.id =
         "cwh-toast";
 
-
     toast.innerHTML = `
-
 <div style="
 display:flex;
 align-items:center;
 gap:10px;
 ">
 
-<span style="
-font-size:20px;
-">
-
+<span style="font-size:20px;">
 ${type === "success" ? "✓" : "⚡"}
-
 </span>
 
 <span>
@@ -1585,66 +1367,54 @@ ${escapeHTML(message)}
 </span>
 
 </div>
-
 `;
 
-
     toast.style.cssText = `
-        position:fixed;
-        right:20px;
-        bottom:25px;
-        z-index:99999;
-        padding:14px 20px;
-        border:1px solid rgba(34,211,238,.6);
-        border-radius:14px;
-        background:rgba(3,7,18,.92);
-        color:#67e8f9;
-        font-family:monospace;
-        font-size:13px;
-        box-shadow:0 0 25px rgba(6,182,212,.25);
-        backdrop-filter:blur(12px);
-        transform:translateY(30px);
-        opacity:0;
-        transition:all .3s ease;
-    `;
-
+position:fixed;
+right:20px;
+bottom:25px;
+z-index:99999;
+padding:14px 20px;
+border:1px solid rgba(34,211,238,.6);
+border-radius:14px;
+background:rgba(3,7,18,.92);
+color:#67e8f9;
+font-family:monospace;
+font-size:13px;
+box-shadow:0 0 25px rgba(6,182,212,.25);
+backdrop-filter:blur(12px);
+transform:translateY(30px);
+opacity:0;
+transition:all .3s ease;
+`;
 
     document.body.appendChild(toast);
 
-
     requestAnimationFrame(() => {
-
         toast.style.transform =
             "translateY(0)";
 
         toast.style.opacity =
             "1";
-
     });
 
-
     setTimeout(() => {
-
         toast.style.opacity =
             "0";
 
         toast.style.transform =
             "translateY(30px)";
 
-
         setTimeout(() => {
-
-            if (toast)
+            if (toast && toast.parentNode) {
                 toast.remove();
-
+            }
         }, 300);
-
     }, 2500);
 }
 
-
 // ==========================================
-// 20. GLOBAL WINDOW COMMANDS
+// 21. GLOBAL WINDOW EXPORTS
 // ==========================================
 
 window.getStableStudentID =
@@ -1692,17 +1462,55 @@ window.downloadCyberID =
 window.toggleMatrixMode =
     toggleMatrixMode;
 
+window.playSFX =
+    playSFX;
 
 // ==========================================
-// 21. STARTUP
+// 22. DOM READY
 // ==========================================
 
 window.addEventListener(
-    "load",
+    "DOMContentLoaded",
     () => {
 
-        getStableStudentID();
+        // Audio button
+        const audioToggleBtn =
+            document.getElementById(
+                "audio-toggle"
+            );
 
+        if (audioToggleBtn) {
+            audioToggleBtn.addEventListener(
+                "click",
+                () => {
+
+                    sfxEnabled =
+                        !sfxEnabled;
+
+                    const status =
+                        document.getElementById(
+                            "sfx-status"
+                        );
+
+                    if (status) {
+                        status.innerText =
+                            sfxEnabled
+                                ? "SFX ON"
+                                : "SFX MUTED";
+                    }
+
+                    if (sfxEnabled) {
+                        playSFX("beep");
+                    }
+                }
+            );
+        }
+
+        // Initialize stars
+        initInputBoxStars();
+
+        // Initialize IDs
+        getStableStudentID();
         getGoldStudentID();
 
         console.log(
@@ -1718,7 +1526,18 @@ window.addEventListener(
             "Gold ID:",
             getGoldStudentID()
         );
+    }
+);
 
+// ==========================================
+// 23. WINDOW LOAD
+// ==========================================
+
+window.addEventListener(
+    "load",
+    () => {
+        initGSAPScroll();
+        initInputBoxStars();
     }
 );
 ````
