@@ -1,0 +1,732 @@
+
+/* =========================================================
+   CODE WITH HARSHIT — CYBER UNIVERSE UI
+   Premium CSS Layer
+========================================================= */
+
+
+/* =========================================================
+   GOOGLE FONT FALLBACK
+========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Orbitron:wght@600;800;900&family=Inter:wght@300;400;600;700;800&display=swap');
+
+
+/* =========================================================
+   ROOT VARIABLES
+========================================================= */
+
+:root {
+    --cyan: #06b6d4;
+    --cyan-light: #67e8f9;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --green: #10b981;
+    --yellow: #facc15;
+
+    --bg: #000000;
+    --panel: rgba(4, 8, 20, 0.78);
+    --panel-dark: rgba(2, 6, 23, 0.88);
+
+    --border: rgba(6, 182, 212, 0.25);
+
+    --shadow-cyan:
+        0 0 20px rgba(6, 182, 212, 0.12),
+        0 0 50px rgba(6, 182, 212, 0.05);
+
+    --radius: 24px;
+}
+
+
+/* =========================================================
+   GLOBAL RESET
+========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    background: #000;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(6, 182, 212, 0.05),
+            transparent 35%
+        ),
+        #000;
+
+    min-height: 100vh;
+
+    font-family: 'Fira Code', monospace;
+
+    overflow-x: hidden;
+}
+
+
+/* =========================================================
+   SELECTION
+========================================================= */
+
+::selection {
+    background: rgba(34, 211, 238, 0.9);
+    color: #000;
+}
+
+
+/* =========================================================
+   FONTS
+========================================================= */
+
+.font-orbitron {
+    font-family: 'Orbitron', sans-serif;
+}
+
+.font-inter {
+    font-family: 'Inter', sans-serif;
+}
+
+
+/* =========================================================
+   CYBER GLASS
+========================================================= */
+
+.glass-cyber {
+    background:
+        linear-gradient(
+            135deg,
+            rgba(8, 15, 35, 0.88),
+            rgba(2, 6, 23, 0.76)
+        );
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.035),
+        0 10px 40px rgba(0, 0, 0, 0.35);
+}
+
+
+/* =========================================================
+   CYBER GLOW
+========================================================= */
+
+.cyber-glow {
+    filter:
+        drop-shadow(0 0 15px rgba(6, 182, 212, 0.65))
+        drop-shadow(0 0 45px rgba(6, 182, 212, 0.25));
+}
+
+
+/* =========================================================
+   WEBGL BACKGROUND
+========================================================= */
+
+#webgl-container {
+    position: fixed;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(6, 182, 212, 0.025),
+            transparent 50%
+        );
+}
+
+#webgl-container canvas {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+#main-header {
+    transition:
+        background 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease,
+        transform 0.3s ease;
+}
+
+#main-header:hover {
+    border-color: rgba(34, 211, 238, 0.5);
+
+    box-shadow:
+        0 0 30px rgba(6, 182, 212, 0.12),
+        0 15px 50px rgba(0, 0, 0, 0.4);
+}
+
+
+/* =========================================================
+   HEADER BRAND
+========================================================= */
+
+#main-header a {
+    text-decoration: none;
+}
+
+
+/* =========================================================
+   BUTTON POLISH
+========================================================= */
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible {
+    outline: 2px solid var(--cyan-light);
+    outline-offset: 3px;
+}
+
+button,
+a {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+#home {
+    position: relative;
+}
+
+
+/* Hero glow behind heading */
+
+#home::before {
+    content: "";
+
+    position: absolute;
+
+    width: 500px;
+    height: 300px;
+
+    left: 50%;
+    top: 40%;
+
+    transform: translate(-50%, -50%);
+
+    background:
+        radial-gradient(
+            ellipse,
+            rgba(6, 182, 212, 0.09),
+            transparent 70%
+        );
+
+    filter: blur(30px);
+
+    pointer-events: none;
+
+    z-index: -1;
+}
+
+
+/* =========================================================
+   CARD HOVER EFFECT
+========================================================= */
+
+article,
+.glass-cyber {
+    transition:
+        transform 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease,
+        background 0.3s ease;
+}
+
+
+/* =========================================================
+   INTERACTIVE CARDS
+========================================================= */
+
+article:hover {
+    box-shadow:
+        0 15px 50px rgba(0, 0, 0, 0.35),
+        0 0 25px rgba(6, 182, 212, 0.06);
+}
+
+
+/* =========================================================
+   TECH CARDS
+========================================================= */
+
+#technologies .glass-cyber {
+    position: relative;
+    overflow: hidden;
+}
+
+#technologies .glass-cyber::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: -120%;
+
+    width: 70%;
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.035),
+            transparent
+        );
+
+    transform: skewX(-20deg);
+
+    transition: left 0.7s ease;
+
+    pointer-events: none;
+}
+
+#technologies .glass-cyber:hover::before {
+    left: 150%;
+}
+
+
+/* =========================================================
+   TERMINAL WINDOW
+========================================================= */
+
+#projects + section {
+    position: relative;
+}
+
+
+/* =========================================================
+   INPUT SYSTEM
+========================================================= */
+
+input {
+    caret-color: var(--cyan-light);
+}
+
+input::placeholder {
+    transition: opacity 0.2s ease;
+}
+
+input:focus::placeholder {
+    opacity: 0.45;
+}
+
+
+/* =========================================================
+   AI WORKSPACE
+========================================================= */
+
+#ai-workspace {
+    background:
+        radial-gradient(
+            circle at 50% 30%,
+            rgba(6, 182, 212, 0.06),
+            transparent 35%
+        ),
+        rgba(0, 0, 0, 0.97);
+}
+
+
+/* Chat scrollbar */
+
+#chat-stream {
+    scrollbar-width: thin;
+    scrollbar-color: var(--cyan) #020617;
+}
+
+
+/* =========================================================
+   AI HOLOGRAM
+========================================================= */
+
+#hologram-avatar {
+    position: relative;
+
+    animation:
+        hologramPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes hologramPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        filter:
+            drop-shadow(0 0 10px rgba(6, 182, 212, 0.35));
+    }
+
+    50% {
+        transform: scale(1.035);
+        filter:
+            drop-shadow(0 0 30px rgba(6, 182, 212, 0.65));
+    }
+}
+
+
+/* =========================================================
+   HOLOGRAM SCANLINES
+========================================================= */
+
+#hologram-avatar::after {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    border-radius: 50%;
+
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            transparent 0px,
+            transparent 4px,
+            rgba(34, 211, 238, 0.06) 5px
+        );
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   INPUT STAR CANVAS
+========================================================= */
+
+#input-star-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+
+/* =========================================================
+   CURSOR
+========================================================= */
+
+#cursor-dot {
+    box-shadow:
+        0 0 8px rgba(34, 211, 238, 0.9),
+        0 0 20px rgba(34, 211, 238, 0.5);
+
+    mix-blend-mode: screen;
+
+    transition:
+        transform 0.08s ease,
+        opacity 0.2s ease;
+}
+
+#cursor-ring {
+    box-shadow:
+        0 0 15px rgba(34, 211, 238, 0.18);
+
+    transition:
+        width 0.25s ease,
+        height 0.25s ease,
+        border-color 0.25s ease;
+}
+
+
+/* Hide custom cursor on touch devices */
+
+@media (hover: none) and (pointer: coarse) {
+
+    #cursor-dot,
+    #cursor-ring {
+        display: none;
+    }
+
+}
+
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+::-webkit-scrollbar-track {
+    background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+    background:
+        linear-gradient(
+            180deg,
+            #22d3ee,
+            #06b6d4,
+            #2563eb
+        );
+
+    border-radius: 999px;
+
+    box-shadow:
+        0 0 10px rgba(6, 182, 212, 0.7);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background:
+        linear-gradient(
+            180deg,
+            #67e8f9,
+            #22d3ee,
+            #3b82f6
+        );
+}
+
+
+/* =========================================================
+   MATRIX MODE
+========================================================= */
+
+body.matrix-mode {
+    filter:
+        hue-rotate(90deg)
+        brightness(1.12);
+
+    transition:
+        filter 0.5s ease;
+}
+
+body.matrix-mode #main-header {
+    border-color: rgba(34, 197, 94, 0.5);
+}
+
+
+/* =========================================================
+   MATRIX MODE TEXT
+========================================================= */
+
+body.matrix-mode .text-cyan-400,
+body.matrix-mode .text-cyan-300 {
+    text-shadow:
+        0 0 10px rgba(34, 197, 94, 0.65);
+}
+
+
+/* =========================================================
+   ID CARD MODAL
+========================================================= */
+
+#id-card-modal {
+    animation: modalFade 0.25s ease;
+}
+
+#login-modal {
+    animation: modalFade 0.25s ease;
+}
+
+@keyframes modalFade {
+
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+
+}
+
+
+/* =========================================================
+   MODAL GLASS
+========================================================= */
+
+#login-modal > div,
+#id-card-modal > div {
+    animation: modalUp 0.35s ease;
+}
+
+@keyframes modalUp {
+
+    from {
+        transform: translateY(15px) scale(0.97);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+
+}
+
+
+/* =========================================================
+   CYBER ID CANVAS
+========================================================= */
+
+#cyber-id-canvas {
+    max-width: 100%;
+    height: auto;
+
+    background: #020617;
+
+    box-shadow:
+        0 0 30px rgba(6, 182, 212, 0.15);
+}
+
+
+/* =========================================================
+   LOADING / STATUS EFFECT
+========================================================= */
+
+.text-green-400 {
+    text-shadow:
+        0 0 8px rgba(16, 185, 129, 0.35);
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+footer {
+    position: relative;
+}
+
+footer::before {
+    content: "";
+
+    position: absolute;
+
+    top: -1px;
+    left: 50%;
+
+    width: 100px;
+    height: 1px;
+
+    transform: translateX(-50%);
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            var(--cyan),
+            transparent
+        );
+
+    box-shadow:
+        0 0 15px rgba(6, 182, 212, 0.8);
+}
+
+
+/* =========================================================
+   MOBILE OPTIMIZATION
+========================================================= */
+
+@media (max-width: 768px) {
+
+    body {
+        font-size: 14px;
+    }
+
+    #main-header {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+    }
+
+    #home::before {
+        width: 300px;
+        height: 220px;
+    }
+
+    .glass-cyber {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+}
+
+
+/* =========================================================
+   SMALL PHONE OPTIMIZATION
+========================================================= */
+
+@media (max-width: 480px) {
+
+    #main-header {
+        padding: 8px 10px;
+        border-radius: 15px;
+    }
+
+    #main-header .font-orbitron {
+        font-size: 9px;
+        letter-spacing: 0.08em;
+    }
+
+    #home {
+        min-height: 88vh;
+    }
+
+    #cyber-id-canvas {
+        width: 100%;
+    }
+
+}
+
+
+/* =========================================================
+   REDUCE MOTION ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+
+}
+
+
+/* =========================================================
+   PERFORMANCE
+========================================================= */
+
+img,
+canvas {
+    max-width: 100%;
+}
+
+video {
+    max-width: 100%;
+    height: auto;
+}
+
+
+/* =========================================================
+   END
+   CODE WITH HARSHIT
+========================================================= */
