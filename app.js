@@ -203,7 +203,7 @@ async function sendWorkspaceQuery() {
     },
     body: JSON.stringify({
         message: promptText,
-        studentName: currentStudent.name
+        studentName: currentStudent?.name || "Harshit"
     })
 });
         clearTimeout(timeoutId);
