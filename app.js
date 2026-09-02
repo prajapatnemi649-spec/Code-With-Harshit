@@ -197,15 +197,15 @@ async function sendWorkspaceQuery() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 12000);
          const res = await fetch("https://code-with-harshit-9hwr.onrender.com/api/chat", {
-            method: "POST",
-            signal: controller.signal,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                prompt: promptText,
-                studentName: currentStudent.name
-            })
-        });
-
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        message: promptText,
+        studentName: currentStudent.name
+    })
+});
         clearTimeout(timeoutId);
         const data = await res.json();
 
