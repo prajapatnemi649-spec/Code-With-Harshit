@@ -196,8 +196,7 @@ async function sendWorkspaceQuery() {
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 12000);
-
-        const res = await fetch("http://localhost:3000/api/chat", {
+         const res = await fetch("https://TUMHARA-RENDER-URL.onrender.com/api/chat", {
             method: "POST",
             signal: controller.signal,
             headers: { "Content-Type": "application/json" },
