@@ -76,16 +76,13 @@ app.post("/api/chat", async (req, res) => {
         );
 
         if (!response.ok) {
-            const errorText = await response.text();
+    const errorText = await response.text();
+    console.error("❌ Groq Error:", errorText);
 
-            console.error(
-                "❌ Groq Error:",
-                errorText
-            );
-
-            return res.status(500).json({
-                error: "AI request failed"
-            });
+    return res.status(response.status).json({
+        error: "Groq Error",
+        details: errorText
+    });
         }
 
         const data = await response.json();
