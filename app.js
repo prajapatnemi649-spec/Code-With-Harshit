@@ -162,7 +162,7 @@ function formatAIResponse(rawText) {
 }
 
 // ==========================================
-// 5. REAL AI QUERY & BACKEND CONNECT (PORT 3000)
+// 5. REAL AI QUERY & RENDER BACKEND CONNECT
 // ==========================================
 async function sendWorkspaceQuery() {
     const input = document.getElementById('workspace-query');
@@ -195,17 +195,20 @@ async function sendWorkspaceQuery() {
 
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 12000);
-         const res = await fetch("https://code-with-harshit-9hwr.onrender.com/api/chat", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-        message: promptText,
-        studentName: currentStudent?.name || "Harshit"
-    })
-});
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+        const res = await fetch("https://code-with-harshit-9hwr.onrender.com/api/chat", {
+            method: "POST",
+            signal: controller.signal,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                message: promptText,
+                studentName: currentStudent?.name || "Student Coder"
+            })
+        });
+
         clearTimeout(timeoutId);
         const data = await res.json();
 
@@ -217,7 +220,7 @@ async function sendWorkspaceQuery() {
         }
     } catch (err) {
         console.warn("Chat Error:", err);
-        aiReply = `<span class="text-red-400">⚠️ Error: ${err.message}</span><br><br><span class="text-slate-400 text-xs">Ensure <code>node server.js</code> is running in your server terminal.</span>`;
+        aiReply = `<span class="text-red-400">⚠️ Error: ${err.message}</span><br><br><span class="text-slate-400 text-xs">Ensure your Render backend is active and responding.</span>`;
     }
 
     if (loadDiv) loadDiv.remove();
@@ -526,33 +529,4 @@ function showStudentStats() {
             </button>
         </div>
     `;
-    document.body.appendChild(modal);
-}
-
-function addProjectStat() {
-    const current = Number(localStorage.getItem("cwh_projects") || 0);
-    localStorage.setItem("cwh_projects", current + 1);
-    showCWHToast("Project added to your stats!", "success");
-}
-
-// Global Window Exports
-window.getStableStudentID = getStableStudentID;
-window.getGoldStudentID = getGoldStudentID;
-window.generateGoldIDCard = generateGoldIDCard;
-window.showStudentStats = showStudentStats;
-window.addProjectStat = addProjectStat;
-window.showCWHToast = showCWHToast;
-window.sendWorkspaceQuery = sendWorkspaceQuery;
-window.handleStudentLogin = handleStudentLogin;
-window.openLoginModal = openLoginModal;
-window.closeLoginModal = closeLoginModal;
-window.closeWorkspace = closeWorkspace;
-window.generateCyberIDCard = generateCyberIDCard;
-window.closeCyberIDModal = closeCyberIDModal;
-window.downloadCyberID = downloadCyberID;
-
-window.addEventListener("load", () => {
-    getStableStudentID();
-    getGoldStudentID();
-    console.log("⚡ Code With Harshit Command System ONLINE");
-});
+    document.body
