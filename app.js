@@ -1,9 +1,41 @@
 // ==========================================
-// 1. GLOBAL VARIABLES & CONFIG
+// CODE WITH HARSHIT - MASTER APP.JS
 // ==========================================
+
 let customApiKey = localStorage.getItem('harshit_ai_key') || "";
 let audioCtx = null;
 let sfxEnabled = true;
+
+// DOM Ready & Event Binding Initialization
+document.addEventListener('DOMContentLoaded', () => {
+    initInputBoxStars();
+    setupEventListeners();
+    getStableStudentID();
+    getGoldStudentID();
+    console.log("⚡ Code With Harshit Engine Initialized");
+});
+
+// Setup Safe Event Listeners for UI Elements
+function setupEventListeners() {
+    const queryInput = document.getElementById('workspace-query');
+    if (queryInput) {
+        queryInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendWorkspaceQuery();
+            }
+        });
+    }
+
+    const loginForm = document.getElementById('student-login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleStudentLogin);
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'h' || e.key === 'H') toggleMatrixMode();
+    });
+}
 
 // Plasma Cursor Tracker
 document.addEventListener('mousemove', (e) => {
@@ -17,10 +49,6 @@ document.addEventListener('mousemove', (e) => {
     }
 });
 
-// Matrix Mode Toggle on [H] Key
-window.addEventListener('keydown', (e) => {
-    if (e.key === 'h' || e.key === 'H') toggleMatrixMode();
-});
 function toggleMatrixMode() {
     document.body.classList.toggle('matrix-mode');
 }
@@ -65,13 +93,10 @@ if (audioToggleBtn) {
     });
 }
 
-// ==========================================
-// 2. GSAP SCROLL CAMERA ZOOM
-// ==========================================
+// GSAP Scroll Camera Zoom
 if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
     gsap.registerPlugin(ScrollTrigger);
     window.addEventListener('load', () => {
-        initInputBoxStars();
         if (typeof camera !== 'undefined') {
             gsap.to(camera.position, {
                 z: -2500,
@@ -87,9 +112,7 @@ if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
     });
 }
 
-// ==========================================
-// 3. FLOATING STARS IN INPUT PROMPT BOX
-// ==========================================
+// Floating Stars in Prompt Box
 function initInputBoxStars() {
     const canvas = document.getElementById('input-star-canvas');
     if (!canvas) return;
@@ -133,37 +156,25 @@ function initInputBoxStars() {
     draw();
 }
 
-// ==========================================
-// 4. PROFESSIONAL AI RESPONSE FORMATTER
-// ==========================================
+// Professional AI Response Formatter
 function formatAIResponse(rawText) {
     if (!rawText) return "";
 
     let formatted = rawText;
 
-    // 1. Multi-line Code blocks formatting (```code```)
     formatted = formatted.replace(/```([\s\S]*?)```/g, (match, p1) => {
         return `<pre class="bg-black/90 p-3 rounded-xl border border-cyan-500/40 my-3 overflow-x-auto text-xs text-cyan-300 font-mono leading-relaxed"><code>${p1.trim()}</code></pre>`;
     });
 
-    // 2. Inline code formatting (`code`)
     formatted = formatted.replace(/`([^`]+)`/g, '<code class="bg-cyan-950/80 px-1.5 py-0.5 rounded text-cyan-300 text-xs font-mono">$1</code>');
-
-    // 3. Bold text formatting (**text**)
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="text-cyan-400 font-bold">$1</strong>');
-
-    // 4. Bullet points
     formatted = formatted.replace(/^\* (.*$)/gm, '<li class="ml-4 list-disc text-slate-300 my-1">$1</li>');
-
-    // 5. Line breaks for regular text
     formatted = formatted.replace(/\n/g, '<br>');
 
     return formatted;
 }
 
-// ==========================================
-// 5. REAL AI QUERY & RENDER BACKEND CONNECT
-// ==========================================
+// AI Query & Backend Connect
 async function sendWorkspaceQuery() {
     const input = document.getElementById('workspace-query');
     if (!input) return;
@@ -197,7 +208,7 @@ async function sendWorkspaceQuery() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-        const res = await fetch("https://code-with-harshit-9hwr.onrender.com/api/chat", {
+        const res = await fetch("/api/chat", {
             method: "POST",
             signal: controller.signal,
             headers: {
@@ -220,7 +231,7 @@ async function sendWorkspaceQuery() {
         }
     } catch (err) {
         console.warn("Chat Error:", err);
-        aiReply = `<span class="text-red-400">⚠️ Error: ${err.message}</span><br><br><span class="text-slate-400 text-xs">Ensure your Render backend is active and responding.</span>`;
+        aiReply = `<span class="text-red-400">⚠️ Error: ${err.message}</span><br><br><span class="text-slate-400 text-xs">Ensure your backend server is active.</span>`;
     }
 
     if (loadDiv) loadDiv.remove();
@@ -235,9 +246,7 @@ async function sendWorkspaceQuery() {
     }
 }
 
-// ==========================================
-// 6. DYNAMIC STUDENT LOGIN & PROFILE STATE
-// ==========================================
+// Student Login & State
 let currentStudent = {
     name: localStorage.getItem('cwh_student_name') || 'Student Coder',
     email: localStorage.getItem('cwh_student_email') || 'student@gmail.com',
@@ -248,17 +257,19 @@ function openLoginModal() {
     const modal = document.getElementById('login-modal');
     if (modal) modal.classList.remove('hidden'); 
 }
+
 function closeLoginModal() { 
     const modal = document.getElementById('login-modal');
     if (modal) modal.classList.add('hidden'); 
 }
+
 function closeWorkspace() { 
     const ws = document.getElementById('ai-workspace');
     if (ws) ws.classList.add('hidden'); 
 }
 
 function handleStudentLogin(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const nameField = document.getElementById('student-input-name');
     const emailField = document.getElementById('student-input-email');
     if (!nameField || !emailField) return;
@@ -307,9 +318,7 @@ function handleStudentLogin(e) {
     }, 800);
 }
 
-// ==========================================
-// 7. DYNAMIC STUDENT CYBER ID & COMMAND CENTER
-// ==========================================
+// Student IDs & Stats
 function generateCyberIDCard() {
     const modal = document.getElementById('id-card-modal');
     if (!modal) return;
@@ -529,4 +538,9 @@ function showStudentStats() {
             </button>
         </div>
     `;
-    document.body
+    document.body.appendChild(modal);
+}
+
+function addProjectStat() {
+    const current = Number(localStorage.getItem("cwh_projects") || 0);
+    l
