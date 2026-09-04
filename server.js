@@ -54,63 +54,63 @@ app.post("/api/chat", async (req, res) => {
                 },
 
                 body: JSON.stringify({
-                    model: "llama-3.3-70b-versatile",
+                    const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+const express = require('express');
+const cors = require('cors');
 
-                    messages: [
-                        {
-                            role: "system",
-                            content:
-                                "You are the AI Mentor for Code With Harshit. Explain coding in simple Hinglish with clean beginner-friendly examples. Help with HTML, CSS, JavaScript, Python, Java and AI. If the user asks to build an app, website or component, provide complete ready-to-run code when appropriate."
-                        },
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-                        {
-                            role: "user",
-                            content: message
-                        }
-                    ],
+app.use(cors());
+app.use(express.json());
 
-                    max_tokens: 700,
-                    temperature: 0.6
-                })
-            }
-        );
+const GROQ_SECRET = process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.startsWith("gsk_")
+    ? process.env.GROQ_API_KEY.trim()
+    : "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";
 
-        if (!response.ok) {
-    const errorText = await response.text();
-    console.error("❌ Groq Error:", errorText);
+app.post('/api/chat', async (req, res) => {
+    const { prompt, studentName } = req.body;
 
-    return res.status(response.status).json({
-        error: "Groq Error",
-        details: errorText
-    });
-        }
+    try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${GROQ_SECRET}`
+            },
+            body: JSON.stringify({
+                model: "llama-3.1-8b-instant", // 100% stable Groq free model
+                messages: [
+                    {
+                        role: "system",
+                        content: `You are Harshit AI, coding mentor for 'Code With Harshit'. Student: ${studentName || 'Student'}. Reply directly in friendly Hinglish with clean code examples.`
+                    },
+                    { role: "user", content: prompt }
+                ],
+                max_tokens: 500,
+                temperature: 0.6
+            })
+        });
 
         const data = await response.json();
-
-        const reply =
-            data?.choices?.[0]?.message?.content;
-
-        if (!reply) {
-            return res.status(500).json({
-                error: "No response generated"
-            });
+        
+        if (!response.ok) {
+            console.error("Groq API Error:", data);
+            return res.status(response.status).json({ error: data.error?.message || "Groq API error" });
         }
 
-        res.json({
-            reply: reply
-        });
-
-    } catch (error) {
-
-        console.error(
-            "❌ Server Error:",
-            error
-        );
-
-        res.status(500).json({
-            error: "Server error"
-        });
+        res.json({ reply: data.choices[0].message.content });
+    } catch (err) {
+        console.error("Server Error:", err);
+        res.status(500).json({ error: "Internal Server Error: " + err.message });
     }
+});
+
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
+                    
 });
 
 // ==========================================
