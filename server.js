@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+path = require('path');
 
 require("dotenv").config();
 
@@ -16,7 +17,6 @@ app.use(express.json());
 // FRONTEND
 // ==========================================
 
-// index.html, app.js, style.css etc. root folder mein hain
 app.use(express.static(__dirname));
 
 // ==========================================
@@ -25,18 +25,19 @@ app.use(express.static(__dirname));
 
 app.post("/api/chat", async (req, res) => {
     try {
-        const { message } = req.body;
+        const userMessage = req.body.message || req.body.prompt;
+        const studentName = req.body.studentName || "Student Coder";
 
-        if (!message || !message.trim()) {
+        if (!userMessage || !userMessage.trim()) {
             return res.status(400).json({
                 error: "Message is required"
             });
         }
 
-        // API key Render Environment Variable se aayegi
-        if (!process.env.GROQ_API_KEY) {
-            console.error("❌ GROQ_API_KEY missing");
+        const apiKey = process.env.GROQ_API_KEY || "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";
 
+        if (!apiKey) {
+            console.error("❌ GROQ_API_KEY missing");
             return res.status(500).json({
                 error: "GROQ API key is not configured"
             });
@@ -46,55 +47,27 @@ app.post("/api/chat", async (req, res) => {
             "https://api.groq.com/openai/v1/chat/completions",
             {
                 method: "POST",
-
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization":
-                        `Bearer ${process.env.GROQ_API_KEY}`
+                    "Authorization": `Bearer ${apiKey.trim()}`
                 },
-
                 body: JSON.stringify({
-                    const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
-const express = require('express');
-const cors = require('cors');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(cors());
-app.use(express.json());
-
-const GROQ_SECRET = process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.startsWith("gsk_")
-    ? process.env.GROQ_API_KEY.trim()
-    : "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";
-
-app.post('/api/chat', async (req, res) => {
-    const { prompt, studentName } = req.body;
-
-    try {
-        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${GROQ_SECRET}`
-            },
-            body: JSON.stringify({
-                model: "llama-3.1-8b-instant", // 100% stable Groq free model
-                messages: [
-                    {
-                        role: "system",
-                        content: `You are Harshit AI, coding mentor for 'Code With Harshit'. Student: ${studentName || 'Student'}. Reply directly in friendly Hinglish with clean code examples.`
-                    },
-                    { role: "user", content: prompt }
-                ],
-                max_tokens: 500,
-                temperature: 0.6
-            })
-        });
+                    model: "llama-3.1-8b-instant",
+                    messages: [
+                        {
+                            role: "system",
+                            content: `You are Harshit AI, the intelligent coding mentor for 'Code With Harshit'. The student's name is ${studentName}. Always answer directly in clear, friendly Hinglish with practical, clean code examples and formatting.`
+                        },
+                        { role: "user", content: userMessage }
+                    ],
+                    max_tokens: 600,
+                    temperature: 0.6
+                })
+            }
+        );
 
         const data = await response.json();
-        
+
         if (!response.ok) {
             console.error("Groq API Error:", data);
             return res.status(response.status).json({ error: data.error?.message || "Groq API error" });
@@ -102,15 +75,9 @@ app.post('/api/chat', async (req, res) => {
 
         res.json({ reply: data.choices[0].message.content });
     } catch (err) {
-        console.error("Server Error:", err);
+        console.error("Server Fetch Error:", err);
         res.status(500).json({ error: "Internal Server Error: " + err.message });
     }
-});
-
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
-                    
 });
 
 // ==========================================
@@ -120,13 +87,6 @@ app.listen(PORT, () => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-
-    console.log(
-        `🚀 Code With Harshit server running on port ${PORT}`
-    );
-
-    console.log(
-        `🌐 Port: ${PORT}`
-    );
-
+    console.log(`🚀 Code With Harshit server running on port ${PORT}`);
+    console.log(`🌐 Port: ${PORT}`);
 });
